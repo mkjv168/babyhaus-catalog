@@ -5,8 +5,8 @@ import { ProductImage } from '@/components/ProductImage';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ProductDetailClient } from '@/components/ProductDetailClient';
+import { AddToCartButton } from '@/components/AddToCartButton';
 
-// Pre-render all product pages at build time using local SQLite DB
 export const dynamic = 'force-dynamic';
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
@@ -76,13 +76,25 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
             {/* Primary CTA */}
             <div className="flex flex-col gap-2 mb-5">
+              <AddToCartButton
+                product={{
+                  id: product.id,
+                  name: product.name,
+                  price: product.price,
+                  imageUrl: product.imageUrl,
+                  brand: product.brand,
+                  category: product.category,
+                  stockStatus: product.stockStatus,
+                }}
+                variant="detail"
+              />
               <a
                 href={`https://t.me/narote?text=${telegramMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#d4a574] text-white font-bold rounded-2xl hover:bg-[#c49464] transition-colors text-center shadow-sm text-base md:text-lg"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#d4a574] text-white font-bold rounded-2xl hover:bg-[#c49464] transition-colors text-center shadow-sm text-base"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 Order via Telegram
               </a>
               {product.stockStatus !== 'outofstock' && (

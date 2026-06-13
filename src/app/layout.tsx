@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { CartProvider } from "@/context/CartContext";
+import { CartDrawer } from "@/components/CartDrawer";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 export const metadata: Metadata = {
@@ -31,8 +33,11 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased pb-16 md:pb-0">
-        {children}
-        <MobileBottomNav />
+        <CartProvider>
+          {children}
+          <CartDrawer />
+          <MobileBottomNav />
+        </CartProvider>
       </body>
     </html>
   );
