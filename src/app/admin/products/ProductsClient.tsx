@@ -3,10 +3,11 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Plus, Search, LayoutGrid, List, Filter } from 'lucide-react';
+import { Plus, Search, LayoutGrid, List, Filter, FileSpreadsheet } from 'lucide-react';
 import { Pagination } from '@/components/Pagination';
 import DeleteButton from './DeleteButton';
 import EditModal from './EditModal';
+import ImportModal from './ImportModal';
 
 interface ProductImage {
   id: string;
@@ -55,6 +56,7 @@ export default function ProductsClient({ products, categories }: ProductsClientP
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   // Bulk selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -116,6 +118,9 @@ export default function ProductsClient({ products, categories }: ProductsClientP
     setIsModalOpen(false);
     setTimeout(() => setSelectedProduct(null), 300);
   };
+
+  const openImport = () => setIsImportOpen(true);
+  const closeImport = () => setIsImportOpen(false);
 
   const handleSuccess = () => {
     closeModal();
@@ -223,6 +228,13 @@ export default function ProductsClient({ products, categories }: ProductsClientP
           >
             <Plus className="w-4 h-4" />
             Add Product
+          </button>
+          <button
+            onClick={openImport}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-[#e8e4df] text-[#2d2d2d] font-semibold rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors text-sm"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            Import CSV
           </button>
         </div>
       </div>
@@ -475,6 +487,11 @@ export default function ProductsClient({ products, categories }: ProductsClientP
         product={selectedProduct}
         isOpen={isModalOpen}
         onClose={closeModal}
+        onSuccess={handleSuccess}
+      />
+      <ImportModal
+        isOpen={isImportOpen}
+        onClose={closeImport}
         onSuccess={handleSuccess}
       />
     </>
