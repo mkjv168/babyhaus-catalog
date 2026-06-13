@@ -28,6 +28,7 @@ export default function ProductForm({ initial, productId }: { initial?: ProductD
     name: '', brand: '', category: '', description: '', price: '', imageUrl: '', sku: '', stockStatus: 'instock', featured: false,
   });
   const [loading, setLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -94,6 +95,8 @@ export default function ProductForm({ initial, productId }: { initial?: ProductD
       <ImageUpload
         currentImage={form.imageUrl}
         onImageChange={(url) => setForm(prev => ({ ...prev, imageUrl: url }))}
+        onUploadStart={() => setImageUploading(true)}
+        onUploadEnd={() => setImageUploading(false)}
       />
       <div>
         <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">Description</label>
@@ -104,8 +107,8 @@ export default function ProductForm({ initial, productId }: { initial?: ProductD
         <span className="text-sm font-semibold text-[#7a7a7a]">Featured Product</span>
       </label>
       <div className="flex gap-3 pt-2">
-        <button type="submit" disabled={loading} className="px-8 py-3 bg-[#d4a574] text-white font-semibold rounded-full hover:bg-[#c49464] transition-colors disabled:opacity-50">
-          {loading ? 'Saving...' : (productId ? 'Update Product' : 'Create Product')}
+        <button type="submit" disabled={loading || imageUploading} className="px-8 py-3 bg-[#d4a574] text-white font-semibold rounded-full hover:bg-[#c49464] transition-colors disabled:opacity-50">
+          {imageUploading ? 'Uploading image...' : loading ? 'Saving...' : (productId ? 'Update Product' : 'Create Product')}
         </button>
         <a href="/admin/products" className="px-8 py-3 border border-[#e8e4df] text-[#2d2d2d] font-semibold rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors">
           Cancel

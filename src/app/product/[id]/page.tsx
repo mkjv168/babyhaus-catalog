@@ -6,6 +6,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ProductDetailClient } from '@/components/ProductDetailClient';
 import { AddToCartButton } from '@/components/AddToCartButton';
+import { ShareButton } from '@/components/ShareButton';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -95,6 +96,11 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   ? 'Pre-Order'
                   : 'Out of Stock'}
               </span>
+              <ShareButton 
+                productId={product.id} 
+                productName={product.name} 
+                className="ml-auto"
+              />
             </div>
 
             {/* Primary CTA */}

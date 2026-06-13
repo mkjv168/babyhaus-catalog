@@ -4,6 +4,8 @@ import { CatalogClient } from '@/components/CatalogClient';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const products = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
   const categories = [...new Set(products.map((p) => p.category))].sort();

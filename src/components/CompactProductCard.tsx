@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ProductImage } from './ProductImage';
 import { AddToCartButton } from './AddToCartButton';
 import { WishlistButton } from './WishlistButton';
+import { ShareButton } from './ShareButton';
 
 interface Product {
   id: string;
@@ -62,13 +63,16 @@ export function CompactProductCard({ product }: CompactProductCardProps) {
           <h3 className="text-sm font-bold text-[#2d2d2d] group-hover:text-[#d4a574] transition-colors line-clamp-2 leading-snug mb-2 min-h-[2.5rem]">
             {product.name}
           </h3>
-          <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center justify-between gap-1 mb-1">
             <span className="text-[#d4a574] font-bold text-sm">
               {product.price ? `$${product.price.toFixed(2)}` : 'Ask'}
             </span>
             <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${stockClass}`}>
               {stockLabel}
             </span>
+          </div>
+          <div className="flex items-center justify-end">
+            <ShareButton productId={product.id} productName={product.name} />
           </div>
         </div>
       </Link>

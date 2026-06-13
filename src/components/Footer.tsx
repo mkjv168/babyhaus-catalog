@@ -129,10 +129,16 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-6 md:mt-10 pt-4 md:pt-6 border-t border-[#e8e4df] flex items-center justify-center md:justify-between gap-3">
-          <p className="text-xs text-[#7a7a7a]">
+        <div className="mt-6 md:mt-10 pt-4 md:pt-6 border-t border-[#e8e4df] flex items-center justify-center md:justify-between gap-3 text-xs text-[#7a7a7a]">
+          <p>
             &copy; {new Date().getFullYear()} Baby Haus. All rights reserved.
           </p>
+          <a 
+            href="/admin" 
+            className="hover:text-[#d4a574] transition-colors"
+          >
+            Admin Portal
+          </a>
         </div>
       </div>
     </footer>
