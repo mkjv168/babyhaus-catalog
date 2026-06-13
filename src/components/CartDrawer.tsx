@@ -122,15 +122,14 @@ export function CartDrawer() {
                 {totalPrice > 0 ? `$${totalPrice.toFixed(2)}` : 'Ask for price'}
               </span>
             </div>
-            <a
-              href={`https://t.me/narote?text=${telegramMessage}`}
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/checkout"
+              onClick={() => setIsOpen(false)}
               className="flex items-center justify-center gap-2 w-full py-3.5 bg-[#d4a574] text-white font-bold rounded-2xl hover:bg-[#c49464] transition-colors text-center shadow-sm"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              Order via Telegram
-            </a>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+              Proceed to Checkout
+            </Link>
             <button
               onClick={clearCart}
               className="w-full py-2 text-xs text-[#b0aba5] hover:text-red-500 transition-colors"

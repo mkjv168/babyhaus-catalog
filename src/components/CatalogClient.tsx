@@ -6,6 +6,8 @@ import { SearchBar } from './SearchBar';
 import { CategoryPills } from './CategoryPills';
 import { SortSelect, SortOption } from './SortSelect';
 import { CompactProductCard } from './CompactProductCard';
+import { Pagination } from './Pagination';
+import { FilterSidebar } from './FilterSidebar';
 
 interface Product {
   id: string;
@@ -26,54 +28,128 @@ interface CatalogClientProps {
   categories: string[];
 }
 
+const PRODUCTS_PER_PAGE_MOBILE = 12;
+const PRODUCTS_PER_PAGE_DESKTOP = 20;
+
 export function CatalogClient({ products, categories }: CatalogClientProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const urlCategory = searchParams.get('category') || 'All';
   const urlSort = (searchParams.get('sort') as SortOption) || 'newest';
+  const urlPage = parseInt(searchParams.get('page') || '1', 10);
+  const urlBrands = searchParams.get('brands')?.split(',').filter(Boolean) || [];
+  const urlMinPrice = parseFloat(searchParams.get('minPrice') || '0');
+  const urlMaxPrice = parseFloat(searchParams.get('maxPrice') || '999999');
   const focusField = searchParams.get('focus');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState(urlCategory);
   const [sort, setSort] = useState<SortOption>(urlSort);
+  const [currentPage, setCurrentPage] = useState(urlPage);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(urlBrands);
+  const [priceRange, setPriceRange] = useState<[number, number]>([urlMinPrice, urlMaxPrice]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Get unique brands
+  const availableBrands = useMemo(() => {
+    const brandsSet = new Set<string>();
+    products.forEach(p => {
+      if (p.brand) brandsSet.add(p.brand);
+    });
+    return Array.from(brandsSet).sort();
+  }, [products]);
+
+  // Calculate max price
+  const maxPrice = useMemo(() => {
+    const prices = products.map(p => p.price).filter((p): p is number => p !== null);
+    return prices.length > 0 ? Math.max(...prices) : 1000;
+  }, [products]);
 
   // Sync URL params
-  const updateUrl = useCallback(
-    (category: string, sortValue: SortOption) => {
-      const params = new URLSearchParams();
-      if (category !== 'All') params.set('category', category);
-      if (sortValue !== 'newest') params.set('sort', sortValue);
-      const qs = params.toString();
-      router.replace(qs ? `/?${qs}` : '/', { scroll: false });
-    },
-    [router]
-  );
+  const updateUrl = useCallback((updates: Partial<{
+    category: string;
+    sort: SortOption;
+    page: number;
+    brands: string[];
+    priceRange: [number, number];
+  }>) => {
+    const params = new URLSearchParams();
+    
+    const newCategory = updates.category ?? activeCategory;
+    const newSort = updates.sort ?? sort;
+    const newPage = updates.page ?? currentPage;
+    const newBrands = updates.brands ?? selectedBrands;
+    const newPriceRange = updates.priceRange ?? priceRange;
+    
+    if (newCategory !== 'All') params.set('category', newCategory);
+    if (newSort !== 'newest') params.set('sort', newSort);
+    if (newPage !== 1) params.set('page', newPage.toString());
+    if (newBrands.length > 0) params.set('brands', newBrands.join(','));
+    if (newPriceRange[0] > 0) params.set('minPrice', newPriceRange[0].toString());
+    if (newPriceRange[1] < maxPrice) params.set('maxPrice', newPriceRange[1].toString());
+    
+    const qs = params.toString();
+    router.replace(qs ? `/?${qs}` : '/', { scroll: false });
+  }, [router, activeCategory, sort, currentPage, selectedBrands, priceRange, maxPrice]);
 
-  const handleCategoryChange = useCallback(
-    (category: string) => {
-      setActiveCategory(category);
-      updateUrl(category, sort);
-    },
-    [sort, updateUrl]
-  );
+  const handleCategoryChange = useCallback((category: string) => {
+    setActiveCategory(category);
+    setCurrentPage(1);
+    updateUrl({ category, page: 1 });
+  }, [updateUrl]);
 
-  const handleSortChange = useCallback(
-    (value: SortOption) => {
-      setSort(value);
-      updateUrl(activeCategory, value);
-    },
-    [activeCategory, updateUrl]
-  );
+  const handleSortChange = useCallback((value: SortOption) => {
+    setSort(value);
+    updateUrl({ sort: value });
+  }, [updateUrl]);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    updateUrl({ page });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [updateUrl]);
+
+  const handleBrandToggle = useCallback((brand: string) => {
+    const newBrands = selectedBrands.includes(brand)
+      ? selectedBrands.filter(b => b !== brand)
+      : [...selectedBrands, brand];
+    setSelectedBrands(newBrands);
+    setCurrentPage(1);
+    updateUrl({ brands: newBrands, page: 1 });
+  }, [selectedBrands, updateUrl]);
+
+  const handlePriceRangeChange = useCallback((range: [number, number]) => {
+    setPriceRange(range);
+    setCurrentPage(1);
+    updateUrl({ priceRange: range, page: 1 });
+  }, [updateUrl]);
+
+  const handleClearFilters = useCallback(() => {
+    setSelectedBrands([]);
+    setPriceRange([0, maxPrice]);
+    setCurrentPage(1);
+    updateUrl({ brands: [], priceRange: [0, maxPrice], page: 1 });
+  }, [maxPrice, updateUrl]);
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
+    // Category filter
     if (activeCategory !== 'All') {
       result = result.filter((p) => p.category === activeCategory);
     }
 
+    // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -86,6 +162,18 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
       );
     }
 
+    // Brand filter
+    if (selectedBrands.length > 0) {
+      result = result.filter(p => p.brand && selectedBrands.includes(p.brand));
+    }
+
+    // Price filter
+    result = result.filter(p => {
+      if (p.price === null) return true; // Show items without price
+      return p.price >= priceRange[0] && p.price <= priceRange[1];
+    });
+
+    // Sorting
     switch (sort) {
       case 'price-asc':
         result.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
@@ -103,7 +191,23 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
     }
 
     return result;
-  }, [products, activeCategory, searchQuery, sort]);
+  }, [products, activeCategory, searchQuery, selectedBrands, priceRange, sort]);
+
+  // Pagination
+  const productsPerPage = isMobile ? PRODUCTS_PER_PAGE_MOBILE : PRODUCTS_PER_PAGE_DESKTOP;
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * productsPerPage;
+    return filteredProducts.slice(start, start + productsPerPage);
+  }, [filteredProducts, currentPage, productsPerPage]);
+
+  // Reset to page 1 if current page is out of bounds
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(1);
+      updateUrl({ page: 1 });
+    }
+  }, [currentPage, totalPages, updateUrl]);
 
   // Focus search if URL param says so
   useEffect(() => {
@@ -120,6 +224,13 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [focusField]);
+
+  // Initialize price range if not set
+  useEffect(() => {
+    if (priceRange[1] === 999999 && maxPrice < 999999) {
+      setPriceRange([0, maxPrice]);
+    }
+  }, [maxPrice, priceRange]);
 
   return (
     <div className="space-y-4">
@@ -141,29 +252,64 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
         />
       </div>
 
-      {/* Results header */}
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-[#7a7a7a]">
-          <span className="font-semibold text-[#2d2d2d]">{filteredProducts.length}</span> product
-          {filteredProducts.length !== 1 ? 's' : ''}
-        </p>
-        <SortSelect value={sort} onChange={handleSortChange} />
-      </div>
+      <div className="flex gap-6">
+        {/* Filter Sidebar */}
+        <FilterSidebar
+          brands={availableBrands}
+          selectedBrands={selectedBrands}
+          onBrandToggle={handleBrandToggle}
+          priceRange={priceRange}
+          onPriceRangeChange={handlePriceRangeChange}
+          maxPrice={maxPrice}
+          onClearFilters={handleClearFilters}
+          productCount={filteredProducts.length}
+        />
 
-      {/* Product Grid */}
-      {filteredProducts.length === 0 ? (
-        <div className="text-center py-16 text-[#7a7a7a]">
-          <p className="text-4xl mb-3">🔍</p>
-          <p className="text-base font-medium">No products found</p>
-          <p className="text-sm mt-1">Try a different search or category</p>
+        {/* Product Grid */}
+        <div className="flex-1">
+          {/* Results header */}
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <p className="text-sm text-[#7a7a7a]">
+              <span className="font-semibold text-[#2d2d2d]">{filteredProducts.length}</span> product
+              {filteredProducts.length !== 1 ? 's' : ''}
+              {currentPage > 1 && ` • Page ${currentPage}`}
+            </p>
+            <SortSelect value={sort} onChange={handleSortChange} />
+          </div>
+
+          {/* Product Grid */}
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-16 text-[#7a7a7a]">
+              <p className="text-4xl mb-3">🔍</p>
+              <p className="text-base font-medium">No products found</p>
+              <p className="text-sm mt-1">Try adjusting your filters</p>
+              {(selectedBrands.length > 0 || priceRange[0] > 0 || priceRange[1] < maxPrice) && (
+                <button
+                  onClick={handleClearFilters}
+                  className="mt-4 px-4 py-2 text-sm font-semibold text-[#d4a574] hover:text-[#c49464] transition-colors"
+                >
+                  Clear all filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+                {paginatedProducts.map((product) => (
+                  <CompactProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              
+              {/* Pagination */}
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </>
+          )}
         </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-          {filteredProducts.map((product) => (
-            <CompactProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
+      </div>
     </div>
   );
 }

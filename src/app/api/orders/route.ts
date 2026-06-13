@@ -26,8 +26,11 @@ export async function POST(req: NextRequest) {
     const order = await prisma.order.create({
       data: {
         productId: body.productId,
+        quantity: body.quantity || 1,
         customerName: body.customerName,
         telegramPhone: body.telegramPhone,
+        deliveryAddress: body.deliveryAddress,
+        paymentMethod: body.paymentMethod || 'cod',
         notes: body.notes,
       },
     });

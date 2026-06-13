@@ -6,8 +6,31 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { ProductDetailClient } from '@/components/ProductDetailClient';
 import { AddToCartButton } from '@/components/AddToCartButton';
+import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+  const product = await prisma.product.findUnique({ where: { id } });
+  
+  if (!product) {
+    return {
+      title: 'Product Not Found | Baby Haus',
+    };
+  }
+
+  return {
+    title: `${product.name} | Baby Haus`,
+    description: product.description || `Shop ${product.name} from ${product.brand || product.category}. Premium baby products imported from USA and Japan. Order via Telegram for fast delivery in Cambodia.`,
+    openGraph: {
+      title: product.name,
+      description: product.description || `Premium ${product.category} from Baby Haus`,
+      images: product.imageUrl ? [product.imageUrl] : undefined,
+      type: 'website',
+    },
+  };
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

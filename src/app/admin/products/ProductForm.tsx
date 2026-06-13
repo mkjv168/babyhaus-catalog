@@ -2,6 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+// Dynamic import to avoid SSR issues with image upload
+const ImageUpload = dynamic(() => import('@/components/ImageUpload'), { 
+  ssr: false,
+  loading: () => <div className="h-32 bg-[#f5f1ec] rounded-xl animate-pulse" />
+});
 
 interface ProductData {
   name: string;
@@ -84,10 +91,10 @@ export default function ProductForm({ initial, productId }: { initial?: ProductD
           </select>
         </div>
       </div>
-      <div>
-        <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">Image URL</label>
-        <input name="imageUrl" value={form.imageUrl} onChange={handleChange} className="w-full bg-[#faf8f5] border border-[#e8e4df] rounded-xl px-4 py-3 text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all" placeholder="/products/your-image.jpg or external URL" />
-      </div>
+      <ImageUpload
+        currentImage={form.imageUrl}
+        onImageChange={(url) => setForm(prev => ({ ...prev, imageUrl: url }))}
+      />
       <div>
         <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">Description</label>
         <textarea name="description" rows={4} value={form.description} onChange={handleChange} className="w-full bg-[#faf8f5] border border-[#e8e4df] rounded-xl px-4 py-3 text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all resize-none" />

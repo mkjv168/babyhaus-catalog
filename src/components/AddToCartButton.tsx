@@ -1,6 +1,7 @@
 'use client';
 
 import { useCart } from '@/context/CartContext';
+import { toast } from 'sonner';
 import { useState } from 'react';
 
 interface AddToCartButtonProps {
@@ -33,11 +34,10 @@ export function AddToCartButton({ product, variant = 'card' }: AddToCartButtonPr
       name: product.name,
       price: product.price,
       imageUrl: product.imageUrl,
-      brand: product.brand,
-      category: product.category,
       stockStatus: product.stockStatus,
     });
 
+    toast.success(`${product.name} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
   };

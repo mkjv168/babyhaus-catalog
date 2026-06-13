@@ -41,7 +41,9 @@ export function CompactProductCard({ product }: CompactProductCardProps) {
           <ProductImage
             src={product.imageUrl}
             alt={product.name}
-            className="w-full h-full"
+            fill
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            className="rounded-t-2xl"
           />
           {product.featured && (
             <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-[#d4a574] text-white rounded-full">
