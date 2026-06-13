@@ -19,6 +19,7 @@ interface ProductData {
   imageUrl: string;
   sku: string;
   stockStatus: string;
+  stockQuantity: string;
   featured: boolean;
 }
 
@@ -35,7 +36,7 @@ export default function ProductForm({
 }) {
   const router = useRouter();
   const [form, setForm] = useState<ProductData>(initial || {
-    name: '', brand: '', category: '', description: '', price: '', imageUrl: '', sku: '', stockStatus: 'instock', featured: false,
+    name: '', brand: '', category: '', description: '', price: '', imageUrl: '', sku: '', stockStatus: 'instock', stockQuantity: '0', featured: false,
   });
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -51,7 +52,7 @@ export default function ProductForm({
     setLoading(true);
     setError('');
     try {
-      const payload = { ...form, price: form.price ? parseFloat(form.price) : null };
+      const payload = { ...form, price: form.price ? parseFloat(form.price) : null, stockQuantity: parseInt(form.stockQuantity || '0', 10) };
       const url = productId ? `/api/products/${productId}` : '/api/products';
       const method = productId ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -104,6 +105,10 @@ export default function ProductForm({
             <option value="outofstock">Out of Stock</option>
             <option value="preorder">Pre-Order</option>
           </select>
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">Stock Quantity</label>
+          <input name="stockQuantity" type="number" min="0" value={form.stockQuantity} onChange={handleChange} className="w-full bg-[#faf8f5] border border-[#e8e4df] rounded-xl px-4 py-3 text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all" placeholder="0" />
         </div>
       </div>
       <ImageUpload

@@ -10,6 +10,7 @@ export default async function AdminProducts() {
   if (!user) redirect('/admin/login');
 
   const products = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
+  const categories = [...new Set(products.map((p) => p.category))].sort();
 
   return (
     <main className="min-h-screen bg-[#faf8f5] text-[#2d2d2d]">
@@ -29,7 +30,7 @@ export default async function AdminProducts() {
       </header>
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <ProductsClient products={products} />
+        <ProductsClient products={products} categories={categories} />
       </section>
     </main>
   );

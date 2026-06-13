@@ -14,6 +14,7 @@ interface Product {
   imageUrl: string | null;
   sku: string | null;
   stockStatus: string;
+  stockQuantity: number;
   featured: boolean;
 }
 
@@ -65,6 +66,7 @@ export default function EditModal({ product, isOpen, onClose, onSuccess }: EditM
     imageUrl: product.imageUrl || '',
     sku: product.sku || '',
     stockStatus: product.stockStatus,
+    stockQuantity: product.stockQuantity?.toString() || '0',
     featured: product.featured,
   } : undefined;
 

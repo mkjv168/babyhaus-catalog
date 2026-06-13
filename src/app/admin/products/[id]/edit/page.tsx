@@ -22,6 +22,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     imageUrl: product.imageUrl || '',
     sku: product.sku || '',
     stockStatus: product.stockStatus,
+    stockQuantity: product.stockQuantity?.toString() || '0',
     featured: product.featured,
   };
 

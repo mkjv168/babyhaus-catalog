@@ -8,10 +8,20 @@ export default async function AdminDashboard() {
   const user = await getAdminUser();
   if (!user) redirect('/admin/login');
 
-  const [productCount, orderCount, pendingOrders] = await Promise.all([
+  const [productCount, orderCount, pendingOrders, lowStockProducts, recentOrders] = await Promise.all([
     prisma.product.count(),
     prisma.order.count(),
     prisma.order.count({ where: { status: 'pending' } }),
+    prisma.product.findMany({
+      where: { stockStatus: 'instock', stockQuantity: { lte: 5, gt: 0 } },
+      orderBy: { stockQuantity: 'asc' },
+      take: 5,
+    }),
+    prisma.order.findMany({
+      include: { product: { select: { name: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    }),
   ]);
 
   return (
@@ -34,6 +44,7 @@ export default async function AdminDashboard() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <p className="text-[#7a7a7a] text-sm mb-6">Signed in as <span className="text-[#d4a574] font-semibold">{user}</span></p>
 
+        {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
           <div className="bg-white rounded-2xl border border-[#e8e4df] p-6 shadow-sm">
             <p className="text-[#7a7a7a] text-xs font-semibold uppercase tracking-wider mb-2">Total Products</p>
@@ -46,6 +57,79 @@ export default async function AdminDashboard() {
           <div className="bg-white rounded-2xl border border-[#e8e4df] p-6 shadow-sm">
             <p className="text-[#7a7a7a] text-xs font-semibold uppercase tracking-wider mb-2">Pending Orders</p>
             <p className="text-4xl font-bold text-[#d4a574]">{pendingOrders}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+          {/* Low Stock Alert */}
+          <div className="bg-white rounded-2xl border border-[#e8e4df] p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">⚠️ Low Stock Alert</h2>
+              {lowStockProducts.length > 0 && (
+                <span className="text-xs font-bold bg-red-50 text-red-500 px-2.5 py-1 rounded-full">
+                  {lowStockProducts.length} items
+                </span>
+              )}
+            </div>
+            {lowStockProducts.length === 0 ? (
+              <p className="text-sm text-[#7a7a7a]">All products are well stocked.</p>
+            ) : (
+              <div className="space-y-3">
+                {lowStockProducts.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between p-3 bg-[#faf8f5] rounded-xl">
+                    <div>
+                      <p className="text-sm font-semibold">{p.name}</p>
+                      <p className="text-xs text-[#7a7a7a]">{p.category}</p>
+                    </div>
+                    <span className="text-sm font-bold text-red-500">{p.stockQuantity} left</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Link
+              href="/admin/products"
+              className="mt-4 inline-block text-sm font-semibold text-[#d4a574] hover:text-[#c49464] transition-colors"
+            >
+              Manage Inventory →
+            </Link>
+          </div>
+
+          {/* Recent Orders */}
+          <div className="bg-white rounded-2xl border border-[#e8e4df] p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">📬 Recent Orders</h2>
+              <Link
+                href="/admin/orders"
+                className="text-sm font-semibold text-[#d4a574] hover:text-[#c49464] transition-colors"
+              >
+                View All →
+              </Link>
+            </div>
+            {recentOrders.length === 0 ? (
+              <p className="text-sm text-[#7a7a7a]">No orders yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {recentOrders.map((o) => (
+                  <div key={o.id} className="flex items-center justify-between p-3 bg-[#faf8f5] rounded-xl">
+                    <div>
+                      <p className="text-sm font-semibold">{o.product?.name || 'Unknown'}</p>
+                      <p className="text-xs text-[#7a7a7a]">{o.customerName} • {o.telegramPhone}</p>
+                    </div>
+                    <span
+                      className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        o.status === 'pending'
+                          ? 'bg-amber-50 text-amber-600'
+                          : o.status === 'confirmed'
+                          ? 'bg-blue-50 text-blue-600'
+                          : 'bg-green-50 text-green-600'
+                      }`}
+                    >
+                      {o.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
