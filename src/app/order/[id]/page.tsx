@@ -13,15 +13,15 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   if (!product) notFound();
 
   return (
-    <main className="min-h-screen bg-[#faf8f5] text-[#2d2d2d]">
+    <main className="min-h-screen bg-white text-[#2D2D2D]">
       <Header />
 
       {/* Sticky back button bar */}
-      <div className="sticky top-14 z-30 bg-[#faf8f5]/90 backdrop-blur-sm border-b border-[#e8e4df]">
+      <div className="sticky top-14 z-30 bg-white/90 backdrop-blur-sm border-b border-[#F0E6DD]">
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <Link
             href={`/product/${product.id}`}
-            className="inline-flex items-center gap-1 text-sm text-[#7a7a7a] hover:text-[#d4a574] transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-[#6B6B6B] hover:text-[#FF6B9D] transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             Back to Product
@@ -31,11 +31,11 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
 
       <section className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
         <div className="text-center mb-8">
-          <p className="text-[#d4a574] text-xs font-bold tracking-wide uppercase mb-2">
+          <p className="text-[#FF6B9D] text-xs font-bold tracking-wide uppercase mb-2">
             Order Request
           </p>
           <h1 className="text-xl md:text-2xl font-bold mb-2 leading-tight">{product.name}</h1>
-          <p className="text-[#7a7a7a] text-sm">
+          <p className="text-[#6B6B6B] text-sm">
             {product.price ? `$${product.price.toFixed(2)}` : 'Ask for Price'} ·{' '}
             {product.stockStatus === 'instock'
               ? 'In Stock'
@@ -45,7 +45,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#e8e4df] p-5 md:p-8 shadow-sm">
+        <div className="bg-white rounded-2xl border border-[#F0E6DD] p-5 md:p-8 shadow-sm">
           <OrderForm productId={product.id} productName={product.name} productPrice={product.price} />
         </div>
       </section>

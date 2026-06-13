@@ -52,7 +52,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: "#faf8f5",
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({
@@ -66,7 +66,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
           rel="stylesheet"
         />
       </head>
@@ -80,9 +80,10 @@ export default function RootLayout({
               position="top-center" 
               toastOptions={{
                 style: {
-                  background: '#2d2d2d',
-                  color: '#faf8f5',
-                  borderRadius: '12px',
+                  background: '#FFFFFF',
+                  color: '#2D2D2D',
+                  borderRadius: '16px',
+                  border: '1px solid #F0E6DD',
                 },
               }}
             />

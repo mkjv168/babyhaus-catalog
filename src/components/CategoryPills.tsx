@@ -20,8 +20,8 @@ export function CategoryPills({ categories, active, onSelect }: CategoryPillsPro
               onClick={() => onSelect(cat)}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all border select-none ${
                 isActive
-                  ? 'bg-[#d4a574] text-white border-[#d4a574] shadow-sm'
-                  : 'bg-white text-[#7a7a7a] border-[#e8e4df] hover:border-[#d4a574] hover:text-[#d4a574]'
+                  ? 'bg-[#FF6B9D] text-white border-[#FF6B9D] shadow-sm'
+                  : 'bg-white text-[#6B6B6B] border-[#F0E6DD] hover:border-[#FF6B9D] hover:text-[#FF6B9D]'
               }`}
             >
               {cat}

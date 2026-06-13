@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 
 const PALETTE = [
-  '#d4a574',
+  '#FF6B9D',
   '#e8b89d',
   '#c9b8d4',
   '#a8d5ba',

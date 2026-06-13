@@ -132,7 +132,7 @@ export default function MultiImageUpload({
       <label className="block text-sm font-semibold text-[#7a7a7a]">
         Product Images <span className="text-[#b0b0b0] font-normal">({images.length}/{maxImages})</span>
         {images.length > 1 && (
-          <span className="ml-2 text-[10px] text-[#d4a574] font-normal">drag to reorder</span>
+          <span className="ml-2 text-[10px] text-[#FF6B9D] font-normal">drag to reorder</span>
         )}
       </label>
       
@@ -160,8 +160,8 @@ export default function MultiImageUpload({
               onDrop={(e) => handleDrop(e, index)}
             >
               <div 
-                className={`relative aspect-square rounded-xl overflow-hidden border-2 bg-[#f5f1ec] cursor-move transition-all ${
-                  isDragOver ? 'border-[#d4a574] ring-2 ring-[#d4a574]/30 scale-105' : 'border-[#e8e4df]'
+                className={`relative aspect-square rounded-xl overflow-hidden border-2 bg-[#FFF9F5] cursor-move transition-all ${
+                  isDragOver ? 'border-[#FF6B9D] ring-2 ring-[#FF6B9D]/30 scale-105' : 'border-[#F0E6DD]'
                 }`}
               >
                 <Image
@@ -179,10 +179,10 @@ export default function MultiImageUpload({
                       e.stopPropagation();
                       document.getElementById(`image-upload-${index}`)?.click();
                     }}
-                    className="p-2 bg-white rounded-full hover:bg-[#f5f1ec] transition-colors"
+                    className="p-2 bg-white rounded-full hover:bg-[#FFF9F5] transition-colors"
                     title="Replace"
                   >
-                    <svg className="w-4 h-4 text-[#2d2d2d]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-4 h-4 text-[#2D2D2D]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                     </svg>
                   </button>
@@ -201,7 +201,7 @@ export default function MultiImageUpload({
                   </button>
                 </div>
                 {index === 0 && (
-                  <div className="absolute top-2 left-2 bg-[#d4a574] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  <div className="absolute top-2 left-2 bg-[#FF6B9D] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                     COVER
                   </div>
                 )}
@@ -239,12 +239,12 @@ export default function MultiImageUpload({
             />
             <label
               htmlFor={`image-upload-${images.length}`}
-              className={`flex flex-col items-center justify-center aspect-square rounded-xl border-2 border-dashed border-[#e8e4df] bg-[#faf8f5] cursor-pointer hover:border-[#d4a574] hover:bg-[#f5ebe0] transition-colors ${
+              className={`flex flex-col items-center justify-center aspect-square rounded-xl border-2 border-dashed border-[#F0E6DD] bg-[#FFFFFF] cursor-pointer hover:border-[#FF6B9D] hover:bg-[#FFF0F5] transition-colors ${
                 uploadingIndex === images.length ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
               {uploadingIndex === images.length ? (
-                <svg className="animate-spin h-6 w-6 text-[#d4a574]" fill="none" viewBox="0 0 24 24">
+                <svg className="animate-spin h-6 w-6 text-[#FF6B9D]" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>

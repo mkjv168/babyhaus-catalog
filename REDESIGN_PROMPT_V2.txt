@@ -1,0 +1,52 @@
+You are a frontend engineer. Redesign the BabyHaus storefront to match a bright, cheerful, children's boutique brand identity.
+
+## Instructions
+1. Read `/home/jarvisp/projects/babyhaus-catalog/DESIGN_V2.md` first — it contains the complete design spec.
+2. The CRITICAL rule: this is a LIGHT theme. White backgrounds, warm cream accents. NO dark mode. The previous dark redesign was wrong.
+3. Read each target file, then rewrite it. Keep all existing logic, hooks, data fetching intact — only change visual presentation.
+4. Do NOT touch any `/admin/*` files or API routes.
+5. After all edits, run `npm run build` in `/home/jarvisp/projects/babyhaus-catalog`. Fix any errors.
+6. Report a concise summary.
+
+## Key Visual Direction
+- White page backgrounds (`#FFFFFF`, `#FFF9F5` for soft sections)
+- Primary accent: warm bubblegum pink `#FF6B9D` (replaces old `#d4a574` tan/beige everywhere)
+- Supporting accents: gold `#F5A623`, green `#4CAF50`, blue `#2196F3`, sky `#90CAF9`
+- Load `Fredoka:wght@400;600;700` from Google Fonts for headings/logo
+- Hero title "Baby Haus" uses multicolor letters matching the logo palette
+- Extra rounded everything (`rounded-3xl` cards, pill buttons) to match groovy rounded letterforms
+- Soft pink-tinted shadows on cards
+- Featured tags use a fun gradient: pink→gold→green→blue
+- Keep all existing functionality
+
+## Target Files
+- `src/app/globals.css`
+- `src/app/layout.tsx`
+- `src/app/page.tsx`
+- `src/app/product/[id]/page.tsx`
+- `src/components/Header.tsx`
+- `src/components/Footer.tsx`
+- `src/components/CompactProductCard.tsx`
+- `src/components/CatalogClient.tsx`
+- `src/components/CartDrawer.tsx`
+- `src/components/MobileBottomNav.tsx`
+- `src/components/ProductQuickView.tsx`
+- `src/components/SearchBar.tsx`
+- `src/components/CategoryPills.tsx`
+- `src/components/SortSelect.tsx`
+- `src/components/Pagination.tsx`
+
+## Replacement Rules
+Replace these old colors globally in target files:
+- `#d4a574` → `#FF6B9D` (primary pink accent)
+- `#c49464` → `#E85A8A` (darker pink for hover)
+- `#f5ebe0` → `#FFF0F5` (soft pink-tinted cream)
+- `#e8e4df` → `#F0E6DD` (warm subtle border)
+- `#faf8f5` → `#FFFFFF` (page bg)
+- `#f5f1ec` → `#FFF9F5` (soft warm surface)
+- `#b0aba5` → `#A0A0A0` (muted text)
+- `text-[#2d2d2d]` → `text-[#2D2D2D]` (keep dark text)
+- `text-[#7a7a7a]` → `text-[#6B6B6B]` (secondary text)
+
+For buttons that were `bg-[#d4a574]`, make them `bg-[#FF6B9D]` with `hover:bg-[#E85A8A]`.
+For featured tags, use `bg-gradient-to-r from-[#FF6B9D] via-[#F5A623] to-[#4CAF50]`.

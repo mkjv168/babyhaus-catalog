@@ -98,7 +98,7 @@ export default function ImageUpload({
       <div className="space-y-3">
         {preview && (
           <div className="relative w-full max-w-sm">
-            <div className="relative aspect-square rounded-xl overflow-hidden border border-[#e8e4df]">
+            <div className="relative aspect-square rounded-xl overflow-hidden border border-[#F0E6DD]">
               <Image
                 src={preview}
                 alt="Product preview"
@@ -132,7 +132,7 @@ export default function ImageUpload({
           />
           <label
             htmlFor="image-upload"
-            className={`inline-flex items-center px-6 py-3 bg-[#f5ebe0] text-[#d4a574] font-semibold rounded-full cursor-pointer hover:bg-[#ede0d1] transition-colors ${
+            className={`inline-flex items-center px-6 py-3 bg-[#FFF0F5] text-[#FF6B9D] font-semibold rounded-full cursor-pointer hover:bg-[#ede0d1] transition-colors ${
               uploading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >

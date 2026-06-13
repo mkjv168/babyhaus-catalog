@@ -76,7 +76,7 @@ export function CheckoutForm() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="text-2xl md:text-3xl font-bold text-[#2d2d2d] mb-8">Checkout</h1>
+      <h1 className="text-2xl md:text-3xl font-bold text-[#2D2D2D] mb-8">Checkout</h1>
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Checkout Form */}
@@ -88,11 +88,11 @@ export function CheckoutForm() {
               </div>
             )}
 
-            <div className="bg-white rounded-2xl border border-[#e8e4df] p-6 space-y-5">
-              <h2 className="text-lg font-bold text-[#2d2d2d]">Contact Information</h2>
+            <div className="bg-white rounded-2xl border border-[#F0E6DD] p-6 space-y-5">
+              <h2 className="text-lg font-bold text-[#2D2D2D]">Contact Information</h2>
               
               <div>
-                <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">
+                <label className="block text-sm font-semibold text-[#6B6B6B] mb-2">
                   Your Name *
                 </label>
                 <input
@@ -100,13 +100,13 @@ export function CheckoutForm() {
                   required
                   value={form.customerName}
                   onChange={handleChange}
-                  className="w-full bg-[#faf8f5] border border-[#e8e4df] rounded-xl px-4 py-3 text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all"
+                  className="w-full bg-white border border-[#F0E6DD] rounded-xl px-4 py-3 text-[#2D2D2D] focus:border-[#FF6B9D] focus:ring-2 focus:ring-[#FF6B9D]/20 focus:outline-none transition-all"
                   placeholder="John Doe"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">
+                <label className="block text-sm font-semibold text-[#6B6B6B] mb-2">
                   Telegram Phone Number *
                 </label>
                 <input
@@ -114,20 +114,20 @@ export function CheckoutForm() {
                   required
                   value={form.telegramPhone}
                   onChange={handleChange}
-                  className="w-full bg-[#faf8f5] border border-[#e8e4df] rounded-xl px-4 py-3 text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all"
+                  className="w-full bg-white border border-[#F0E6DD] rounded-xl px-4 py-3 text-[#2D2D2D] focus:border-[#FF6B9D] focus:ring-2 focus:ring-[#FF6B9D]/20 focus:outline-none transition-all"
                   placeholder="+855 12 345 6789"
                 />
-                <p className="text-xs text-[#7a7a7a] mt-1">
+                <p className="text-xs text-[#6B6B6B] mt-1">
                   We'll contact you via Telegram for order updates
                 </p>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#e8e4df] p-6 space-y-5">
-              <h2 className="text-lg font-bold text-[#2d2d2d]">Delivery Information</h2>
+            <div className="bg-white rounded-2xl border border-[#F0E6DD] p-6 space-y-5">
+              <h2 className="text-lg font-bold text-[#2D2D2D]">Delivery Information</h2>
               
               <div>
-                <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">
+                <label className="block text-sm font-semibold text-[#6B6B6B] mb-2">
                   Delivery Address *
                 </label>
                 <textarea
@@ -136,13 +136,13 @@ export function CheckoutForm() {
                   rows={3}
                   value={form.deliveryAddress}
                   onChange={handleChange}
-                  className="w-full bg-[#faf8f5] border border-[#e8e4df] rounded-xl px-4 py-3 text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all resize-none"
+                  className="w-full bg-white border border-[#F0E6DD] rounded-xl px-4 py-3 text-[#2D2D2D] focus:border-[#FF6B9D] focus:ring-2 focus:ring-[#FF6B9D]/20 focus:outline-none transition-all resize-none"
                   placeholder="House number, street name, district, city"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">
+                <label className="block text-sm font-semibold text-[#6B6B6B] mb-2">
                   Order Notes (Optional)
                 </label>
                 <textarea
@@ -150,14 +150,14 @@ export function CheckoutForm() {
                   rows={2}
                   value={form.notes}
                   onChange={handleChange}
-                  className="w-full bg-[#faf8f5] border border-[#e8e4df] rounded-xl px-4 py-3 text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all resize-none"
+                  className="w-full bg-white border border-[#F0E6DD] rounded-xl px-4 py-3 text-[#2D2D2D] focus:border-[#FF6B9D] focus:ring-2 focus:ring-[#FF6B9D]/20 focus:outline-none transition-all resize-none"
                   placeholder="Any special instructions for delivery"
                 />
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#e8e4df] p-6 space-y-5">
-              <h2 className="text-lg font-bold text-[#2d2d2d]">Payment Method</h2>
+            <div className="bg-white rounded-2xl border border-[#F0E6DD] p-6 space-y-5">
+              <h2 className="text-lg font-bold text-[#2D2D2D]">Payment Method</h2>
               
               <div className="space-y-3">
                 <label className="flex items-start gap-3 cursor-pointer group">
@@ -167,13 +167,13 @@ export function CheckoutForm() {
                     value="cod"
                     checked={form.paymentMethod === 'cod'}
                     onChange={handleChange}
-                    className="mt-0.5 w-4 h-4 accent-[#d4a574]"
+                    className="mt-0.5 w-4 h-4 accent-[#FF6B9D]"
                   />
                   <div>
-                    <p className="font-semibold text-[#2d2d2d] group-hover:text-[#d4a574] transition-colors">
+                    <p className="font-semibold text-[#2D2D2D] group-hover:text-[#FF6B9D] transition-colors">
                       Cash on Delivery
                     </p>
-                    <p className="text-sm text-[#7a7a7a]">
+                    <p className="text-sm text-[#6B6B6B]">
                       Pay when you receive your order
                     </p>
                   </div>
@@ -186,13 +186,13 @@ export function CheckoutForm() {
                     value="bank"
                     checked={form.paymentMethod === 'bank'}
                     onChange={handleChange}
-                    className="mt-0.5 w-4 h-4 accent-[#d4a574]"
+                    className="mt-0.5 w-4 h-4 accent-[#FF6B9D]"
                   />
                   <div>
-                    <p className="font-semibold text-[#2d2d2d] group-hover:text-[#d4a574] transition-colors">
+                    <p className="font-semibold text-[#2D2D2D] group-hover:text-[#FF6B9D] transition-colors">
                       Bank Transfer
                     </p>
-                    <p className="text-sm text-[#7a7a7a]">
+                    <p className="text-sm text-[#6B6B6B]">
                       Transfer to our bank account (details will be sent via Telegram)
                     </p>
                   </div>
@@ -203,7 +203,7 @@ export function CheckoutForm() {
             <button
               type="submit"
               disabled={loading || items.length === 0}
-              className="w-full px-8 py-4 bg-[#d4a574] text-white font-bold rounded-full hover:bg-[#c49464] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
+              className="w-full px-8 py-4 bg-[#FF6B9D] text-white font-bold rounded-full hover:bg-[#E85A8A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
             >
               {loading ? 'Placing Order...' : `Place Order • $${total.toFixed(2)}`}
             </button>
@@ -212,13 +212,13 @@ export function CheckoutForm() {
 
         {/* Order Summary */}
         <div>
-          <div className="bg-white rounded-2xl border border-[#e8e4df] p-6 sticky top-20">
-            <h2 className="text-lg font-bold text-[#2d2d2d] mb-4">Order Summary</h2>
+          <div className="bg-white rounded-2xl border border-[#F0E6DD] p-6 sticky top-20">
+            <h2 className="text-lg font-bold text-[#2D2D2D] mb-4">Order Summary</h2>
             
             <div className="space-y-4 mb-6">
               {items.map((item) => (
                 <div key={item.id} className="flex gap-4">
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-[#f5f1ec]">
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-[#FFF9F5]">
                     <ProductImage
                       src={item.imageUrl}
                       alt={item.name}
@@ -227,9 +227,9 @@ export function CheckoutForm() {
                     />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-[#2d2d2d] text-sm">{item.name}</h3>
-                    <p className="text-xs text-[#7a7a7a] mt-1">Qty: {item.quantity}</p>
-                    <p className="font-semibold text-[#d4a574] mt-1">
+                    <h3 className="font-semibold text-[#2D2D2D] text-sm">{item.name}</h3>
+                    <p className="text-xs text-[#6B6B6B] mt-1">Qty: {item.quantity}</p>
+                    <p className="font-semibold text-[#FF6B9D] mt-1">
                       ${item.price ? (item.price * item.quantity).toFixed(2) : 'Ask'}
                     </p>
                   </div>
@@ -237,18 +237,18 @@ export function CheckoutForm() {
               ))}
             </div>
             
-            <div className="border-t border-[#e8e4df] pt-4 space-y-2">
+            <div className="border-t border-[#F0E6DD] pt-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-[#7a7a7a]">Subtotal</span>
+                <span className="text-[#6B6B6B]">Subtotal</span>
                 <span className="font-semibold">${total.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-[#7a7a7a]">Delivery</span>
+                <span className="text-[#6B6B6B]">Delivery</span>
                 <span className="font-semibold text-green-600">Free</span>
               </div>
-              <div className="flex justify-between pt-2 border-t border-[#e8e4df]">
-                <span className="font-bold text-[#2d2d2d]">Total</span>
-                <span className="font-bold text-lg text-[#d4a574]">${total.toFixed(2)}</span>
+              <div className="flex justify-between pt-2 border-t border-[#F0E6DD]">
+                <span className="font-bold text-[#2D2D2D]">Total</span>
+                <span className="font-bold text-lg text-[#FF6B9D]">${total.toFixed(2)}</span>
               </div>
             </div>
           </div>

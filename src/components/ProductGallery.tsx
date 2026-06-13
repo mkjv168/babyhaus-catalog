@@ -14,7 +14,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
 
   if (images.length === 0) {
     return (
-      <div className="aspect-square relative bg-[#f5f1ec] rounded-2xl overflow-hidden border border-[#e8e4df]">
+      <div className="aspect-square relative bg-[#FFF9F5] rounded-2xl overflow-hidden border border-[#F0E6DD]">
         <span className="text-6xl flex items-center justify-center h-full">👶</span>
       </div>
     );
@@ -22,7 +22,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
 
   if (images.length === 1) {
     return (
-      <div className="aspect-square relative bg-[#f5f1ec] rounded-2xl overflow-hidden border border-[#e8e4df]">
+      <div className="aspect-square relative bg-[#FFF9F5] rounded-2xl overflow-hidden border border-[#F0E6DD]">
         <ProductImage src={images[0]} alt={productName} className="w-full h-full" />
       </div>
     );
@@ -31,7 +31,7 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
   return (
     <div className="space-y-3">
       {/* Main image */}
-      <div className="aspect-square relative bg-[#f5f1ec] rounded-2xl overflow-hidden border border-[#e8e4df]">
+      <div className="aspect-square relative bg-[#FFF9F5] rounded-2xl overflow-hidden border border-[#F0E6DD]">
         <ProductImage src={images[activeIndex]} alt={`${productName} - Photo ${activeIndex + 1}`} className="w-full h-full" />
         {/* Image counter */}
         <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full">
@@ -47,8 +47,8 @@ export default function ProductGallery({ images, productName }: ProductGalleryPr
             onClick={() => setActiveIndex(index)}
             className={`relative w-16 h-16 sm:w-20 sm:h-20 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
               index === activeIndex 
-                ? 'border-[#d4a574] ring-2 ring-[#d4a574]/20' 
-                : 'border-[#e8e4df] hover:border-[#b0b0b0]'
+                ? 'border-[#FF6B9D] ring-2 ring-[#FF6B9D]/20' 
+                : 'border-[#F0E6DD] hover:border-[#b0b0b0]'
             }`}
           >
             <Image
