@@ -10,8 +10,13 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   if (!user) redirect('/admin/login');
 
   const { id } = await params;
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await prisma.product.findUnique({ 
+    where: { id },
+    include: { images: { orderBy: { order: 'asc' } } },
+  });
   if (!product) notFound();
+
+  const imageUrls = product.images.map(img => img.url);
 
   const initial = {
     name: product.name,
@@ -19,7 +24,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     category: product.category,
     description: product.description || '',
     price: product.price?.toString() || '',
-    imageUrl: product.imageUrl || '',
+    images: imageUrls,
     sku: product.sku || '',
     stockStatus: product.stockStatus,
     stockQuantity: product.stockQuantity?.toString() || '0',

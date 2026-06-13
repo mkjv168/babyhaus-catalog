@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-// Dynamic import to avoid SSR issues with image upload
-const ImageUpload = dynamic(() => import('@/components/ImageUpload'), { 
+const MultiImageUpload = dynamic(() => import('@/components/MultiImageUpload'), { 
   ssr: false,
   loading: () => <div className="h-32 bg-[#f5f1ec] rounded-xl animate-pulse" />
 });
@@ -16,7 +15,7 @@ interface ProductData {
   category: string;
   description: string;
   price: string;
-  imageUrl: string;
+  images: string[];
   sku: string;
   stockStatus: string;
   stockQuantity: string;
@@ -36,7 +35,7 @@ export default function ProductForm({
 }) {
   const router = useRouter();
   const [form, setForm] = useState<ProductData>(initial || {
-    name: '', brand: '', category: '', description: '', price: '', imageUrl: '', sku: '', stockStatus: 'instock', stockQuantity: '0', featured: false,
+    name: '', brand: '', category: '', description: '', price: '', images: [], sku: '', stockStatus: 'instock', stockQuantity: '0', featured: false,
   });
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -52,7 +51,12 @@ export default function ProductForm({
     setLoading(true);
     setError('');
     try {
-      const payload = { ...form, price: form.price ? parseFloat(form.price) : null, stockQuantity: parseInt(form.stockQuantity || '0', 10) };
+      const payload = { 
+        ...form, 
+        price: form.price ? parseFloat(form.price) : null, 
+        stockQuantity: parseInt(form.stockQuantity || '0', 10),
+        imageUrl: form.images[0] || null,
+      };
       const url = productId ? `/api/products/${productId}` : '/api/products';
       const method = productId ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -111,11 +115,12 @@ export default function ProductForm({
           <input name="stockQuantity" type="number" min="0" value={form.stockQuantity} onChange={handleChange} className="w-full bg-[#faf8f5] border border-[#e8e4df] rounded-xl px-4 py-3 text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all" placeholder="0" />
         </div>
       </div>
-      <ImageUpload
-        currentImage={form.imageUrl}
-        onImageChange={(url) => setForm(prev => ({ ...prev, imageUrl: url }))}
+      <MultiImageUpload
+        images={form.images}
+        onImagesChange={(images) => setForm(prev => ({ ...prev, images }))}
         onUploadStart={() => setImageUploading(true)}
         onUploadEnd={() => setImageUploading(false)}
+        maxImages={4}
       />
       <div>
         <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">Description</label>

@@ -7,6 +7,7 @@ import { Footer } from '@/components/Footer';
 import { ProductDetailClient } from '@/components/ProductDetailClient';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import { ShareButton } from '@/components/ShareButton';
+import ProductGallery from '@/components/ProductGallery';
 import type { Metadata } from 'next';
 
 export const revalidate = 60;
@@ -40,8 +41,15 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await prisma.product.findUnique({ 
+    where: { id },
+    include: { images: { orderBy: { order: 'asc' } } },
+  });
   if (!product) notFound();
+
+  const imageUrls = product.images.length > 0 
+    ? product.images.map(img => img.url)
+    : product.imageUrl ? [product.imageUrl] : [];
 
   const telegramMessage = encodeURIComponent(
     `Hi Baby Haus, I am interested in ordering: ${product.name}${product.price ? ` ($${product.price.toFixed(2)})` : ''}. Please confirm availability.`
@@ -66,14 +74,8 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
-          {/* Image */}
-          <div className="aspect-square relative bg-[#f5f1ec] rounded-2xl overflow-hidden border border-[#e8e4df]">
-            <ProductImage
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-full"
-            />
-          </div>
+          {/* Image Gallery */}
+          <ProductGallery images={imageUrls} productName={product.name} />
 
           {/* Info */}
           <div className="flex flex-col">

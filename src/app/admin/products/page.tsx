@@ -9,7 +9,10 @@ export default async function AdminProducts() {
   const user = await getAdminUser();
   if (!user) redirect('/admin/login');
 
-  const products = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
+  const products = await prisma.product.findMany({ 
+    orderBy: { createdAt: 'desc' },
+    include: { images: { orderBy: { order: 'asc' } } },
+  });
   const categories = [...new Set(products.map((p) => p.category))].sort();
 
   return (

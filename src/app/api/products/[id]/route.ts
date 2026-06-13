@@ -4,7 +4,10 @@ import { requireAdmin } from '@/lib/auth';
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await prisma.product.findUnique({ where: { id } });
+  const product = await prisma.product.findUnique({ 
+    where: { id },
+    include: { images: { orderBy: { order: 'asc' } } },
+  });
   if (!product) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(product);
 }
@@ -14,8 +17,40 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     await requireAdmin();
     const { id } = await params;
     const body = await req.json();
-    const product = await prisma.product.update({ where: { id }, data: body });
-    return NextResponse.json(product);
+    const { images, ...productData } = body;
+
+    // Update product and sync images in a transaction
+    const product = await prisma.$transaction(async (tx) => {
+      // Delete existing images
+      await tx.productImage.deleteMany({ where: { productId: id } });
+
+      // Update product
+      const updated = await tx.product.update({ 
+        where: { id }, 
+        data: productData,
+      });
+
+      // Create new images if provided
+      if (images?.length > 0) {
+        await tx.productImage.createMany({
+          data: images.map((url: string, index: number) => ({
+            url,
+            order: index,
+            productId: id,
+          })),
+        });
+      }
+
+      return updated;
+    });
+
+    // Return with images
+    const result = await prisma.product.findUnique({
+      where: { id: product.id },
+      include: { images: { orderBy: { order: 'asc' } } },
+    });
+
+    return NextResponse.json(result);
   } catch (e: any) {
     if (e.message === 'Unauthorized') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     return NextResponse.json({ error: e.message }, { status: 500 });

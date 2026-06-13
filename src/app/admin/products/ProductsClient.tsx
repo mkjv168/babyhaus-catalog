@@ -8,6 +8,12 @@ import { Pagination } from '@/components/Pagination';
 import DeleteButton from './DeleteButton';
 import EditModal from './EditModal';
 
+interface ProductImage {
+  id: string;
+  url: string;
+  order: number;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -20,6 +26,7 @@ interface Product {
   stockStatus: string;
   stockQuantity: number;
   featured: boolean;
+  images: ProductImage[];
 }
 
 interface ProductsClientProps {

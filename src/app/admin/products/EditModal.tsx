@@ -4,6 +4,12 @@ import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import ProductForm from './ProductForm';
 
+interface ProductImage {
+  id: string;
+  url: string;
+  order: number;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -16,6 +22,7 @@ interface Product {
   stockStatus: string;
   stockQuantity: number;
   featured: boolean;
+  images?: ProductImage[];
 }
 
 interface EditModalProps {
@@ -57,13 +64,19 @@ export default function EditModal({ product, isOpen, onClose, onSuccess }: EditM
 
   const isCreate = !product;
 
+  const imageUrls = product?.images 
+    ? product.images.sort((a, b) => a.order - b.order).map(img => img.url)
+    : product?.imageUrl 
+      ? [product.imageUrl] 
+      : [];
+
   const initial = product ? {
     name: product.name,
     brand: product.brand || '',
     category: product.category,
     description: product.description || '',
     price: product.price?.toString() || '',
-    imageUrl: product.imageUrl || '',
+    images: imageUrls,
     sku: product.sku || '',
     stockStatus: product.stockStatus,
     stockQuantity: product.stockQuantity?.toString() || '0',
