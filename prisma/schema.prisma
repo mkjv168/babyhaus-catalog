@@ -27,12 +27,12 @@ model Product {
 model Order {
   id            String   @id @default(uuid())
   productId     String
-  product       Product  @relation(fields: [productId], references: [id])
   customerName  String
   telegramPhone String
   notes         String?
   status        String   @default("pending")
   createdAt     DateTime @default(now())
+  product       Product  @relation(fields: [productId], references: [id])
 }
 
 model AdminUser {

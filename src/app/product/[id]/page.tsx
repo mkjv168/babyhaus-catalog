@@ -7,10 +7,7 @@ import { Footer } from '@/components/Footer';
 import { ProductDetailClient } from '@/components/ProductDetailClient';
 
 // Pre-render all product pages at build time using local SQLite DB
-export async function generateStaticParams() {
-  const products = await prisma.product.findMany({ select: { id: true } });
-  return products.map((p) => ({ id: p.id }));
-}
+export const dynamic = 'force-dynamic';
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
