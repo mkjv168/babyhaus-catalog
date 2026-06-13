@@ -3,23 +3,27 @@
 @tailwind utilities;
 
 :root {
-  --bg-deep: #06060a;
-  --bg-surface: #0e0e14;
-  --bg-elevated: #16161f;
-  --text-primary: #f0ece4;
-  --text-secondary: #9a9590;
-  --accent: #c9a84c;
-  --accent-dim: #8a7340;
+  --bg-warm: #faf8f5;
+  --bg-cream: #f5f1ec;
+  --surface: #ffffff;
+  --text-primary: #2d2d2d;
+  --text-secondary: #7a7a7a;
+  --accent: #d4a574;
+  --accent-hover: #c49464;
+  --accent-light: #f5ebe0;
+  --border: #e8e4df;
+  --success: #7ec8a0;
+  --danger: #e07a7a;
 }
 
 body {
-  background-color: var(--bg-deep);
+  background-color: var(--bg-warm);
   color: var(--text-primary);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 ::selection {
-  background: rgba(201, 168, 76, 0.3);
+  background: rgba(212, 165, 116, 0.3);
   color: var(--text-primary);
 }
 
@@ -28,12 +32,12 @@ body {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-deep);
+  background: var(--bg-warm);
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--bg-elevated);
+  background: #d4cfc7;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-dim);
+  background: var(--accent);
 }

@@ -33,7 +33,7 @@ export default function StatusButton({ id, currentStatus }: { id: string; curren
     <button
       onClick={() => updateStatus(nextStatus)}
       disabled={loading}
-      className="text-xs text-[#9a9590] hover:text-[#c9a84c] underline disabled:opacity-50"
+      className="text-sm text-[#7a7a7a] hover:text-[#d4a574] font-medium disabled:opacity-50"
     >
       {loading ? '...' : `Mark ${nextStatus}`}
     </button>

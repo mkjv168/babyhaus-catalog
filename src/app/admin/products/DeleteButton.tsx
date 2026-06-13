@@ -21,7 +21,7 @@ export default function DeleteButton({ id }: { id: string }) {
   };
 
   return (
-    <button onClick={handleDelete} disabled={loading} className="text-xs text-red-400 hover:text-red-300 underline disabled:opacity-50">
+    <button onClick={handleDelete} disabled={loading} className="text-sm text-red-400 hover:text-red-500 font-medium disabled:opacity-50">
       {loading ? '...' : 'Delete'}
     </button>
   );

@@ -34,25 +34,25 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {error && <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-3 text-sm">{error}</div>}
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {error && <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm">{error}</div>}
       <div>
-        <label className="block text-sm text-[#9a9590] uppercase tracking-wider mb-2">Username</label>
+        <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">Username</label>
         <input
           type="text" required value={username} onChange={e => setUsername(e.target.value)}
-          className="w-full bg-[#16161f] border border-white/10 px-4 py-3 text-[#f0ece4] focus:border-[#c9a84c] focus:outline-none transition-colors"
+          className="w-full bg-[#faf8f5] border border-[#e8e4df] rounded-xl px-4 py-3 text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all"
         />
       </div>
       <div>
-        <label className="block text-sm text-[#9a9590] uppercase tracking-wider mb-2">Password</label>
+        <label className="block text-sm font-semibold text-[#7a7a7a] mb-2">Password</label>
         <input
           type="password" required value={password} onChange={e => setPassword(e.target.value)}
-          className="w-full bg-[#16161f] border border-white/10 px-4 py-3 text-[#f0ece4] focus:border-[#c9a84c] focus:outline-none transition-colors"
+          className="w-full bg-[#faf8f5] border border-[#e8e4df] rounded-xl px-4 py-3 text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all"
         />
       </div>
       <button
         type="submit" disabled={loading}
-        className="w-full px-8 py-4 bg-[#c9a84c] text-[#06060a] font-semibold tracking-wider uppercase text-sm hover:bg-[#ddb654] transition-colors disabled:opacity-50"
+        className="w-full px-8 py-4 bg-[#d4a574] text-white font-semibold rounded-full hover:bg-[#c49464] transition-colors disabled:opacity-50"
       >
         {loading ? 'Signing in...' : 'Sign In'}
       </button>
