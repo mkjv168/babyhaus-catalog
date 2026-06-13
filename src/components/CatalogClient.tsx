@@ -7,6 +7,7 @@ import { CategoryPills } from './CategoryPills';
 import { SortSelect, SortOption } from './SortSelect';
 import { CompactProductCard } from './CompactProductCard';
 import { Pagination } from './Pagination';
+import { ProductQuickView } from './ProductQuickView';
 
 interface Product {
   id: string;
@@ -44,6 +45,7 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
   const [sort, setSort] = useState<SortOption>(urlSort);
   const [currentPage, setCurrentPage] = useState(urlPage);
   const [isMobile, setIsMobile] = useState(false);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   // Detect mobile
   useEffect(() => {
@@ -89,6 +91,14 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
     updateUrl({ page });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [updateUrl]);
+
+  const handleQuickView = useCallback((product: Product) => {
+    setQuickViewProduct(product);
+  }, []);
+
+  const handleCloseQuickView = useCallback(() => {
+    setQuickViewProduct(null);
+  }, []);
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
@@ -206,7 +216,11 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
               {paginatedProducts.map((product) => (
-                <CompactProductCard key={product.id} product={product} />
+                <CompactProductCard
+                  key={product.id}
+                  product={product}
+                  onQuickView={() => handleQuickView(product)}
+                />
               ))}
             </div>
             
@@ -219,6 +233,13 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
           </>
         )}
       </div>
+
+      {/* Mobile Quick View Sheet */}
+      <ProductQuickView
+        product={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onClose={handleCloseQuickView}
+      />
     </div>
   );
 }

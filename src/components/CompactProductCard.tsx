@@ -11,17 +11,20 @@ interface Product {
   name: string;
   brand: string | null;
   category: string;
+  description?: string | null;
   price: number | null;
   imageUrl: string | null;
+  sku?: string | null;
   stockStatus: string;
   featured: boolean;
 }
 
 interface CompactProductCardProps {
   product: Product;
+  onQuickView?: () => void;
 }
 
-export function CompactProductCard({ product }: CompactProductCardProps) {
+export function CompactProductCard({ product, onQuickView }: CompactProductCardProps) {
   const stockLabel =
     product.stockStatus === 'instock'
       ? 'In Stock'
@@ -36,9 +39,21 @@ export function CompactProductCard({ product }: CompactProductCardProps) {
       ? 'bg-amber-50 text-amber-600'
       : 'bg-red-50 text-red-600';
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768 && onQuickView) {
+      e.preventDefault();
+      onQuickView();
+    }
+  };
+
   return (
-    <div className="group bg-white rounded-2xl overflow-hidden border border-[#e8e4df] transition-all duration-200 active:scale-[0.98] hover:shadow-md hover:border-[#d4a574]/30">
-      <Link href={`/product/${product.id}`} className="block">
+    <div className="group bg-white rounded-2xl overflow-hidden border border-[#e8e4df] transition-all duration-200 active:scale-[0.98] hover:shadow-md hover:border-[#d4a574]/30 relative">
+      <Link
+        href={`/product/${product.id}`}
+        prefetch={true}
+        className="block"
+        onClick={handleCardClick}
+      >
         <div className="relative aspect-square bg-[#f5f1ec]">
           <ProductImage
             src={product.imageUrl}
@@ -48,13 +63,10 @@ export function CompactProductCard({ product }: CompactProductCardProps) {
             className="rounded-t-2xl"
           />
           {product.featured && (
-            <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-[#d4a574] text-white rounded-full">
+            <span className="absolute top-2 left-2 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide bg-[#d4a574] text-white rounded-full z-10">
               Featured
             </span>
           )}
-          <div className="absolute top-2 right-2">
-            <WishlistButton product={product} />
-          </div>
         </div>
         <div className="p-3 pb-2">
           <p className="text-[#d4a574] text-[10px] font-bold tracking-wide uppercase mb-1">
@@ -71,11 +83,17 @@ export function CompactProductCard({ product }: CompactProductCardProps) {
               {stockLabel}
             </span>
           </div>
-          <div className="flex items-center justify-end">
+          <div
+            className="flex items-center justify-end"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          >
             <ShareButton productId={product.id} productName={product.name} />
           </div>
         </div>
       </Link>
+      <div className="absolute top-2 right-2 z-10">
+        <WishlistButton product={product} />
+      </div>
       <div className="px-3 pb-3">
         <AddToCartButton product={product} variant="card" />
       </div>
