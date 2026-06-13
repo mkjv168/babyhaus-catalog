@@ -5,6 +5,12 @@ import OrderForm from './OrderForm';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 
+// Pre-render all order pages at build time using local SQLite DB
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({ select: { id: true } });
+  return products.map((p) => ({ id: p.id }));
+}
+
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const product = await prisma.product.findUnique({ where: { id } });

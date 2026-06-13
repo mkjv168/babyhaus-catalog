@@ -12,6 +12,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(orders);
   } catch (e: any) {
     if (e.message === 'Unauthorized') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Graceful fallback when DB is unavailable (e.g. static deployment)
+    if (e.name === 'PrismaClientInitializationError') {
+      return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
+    }
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
@@ -29,6 +33,13 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json(order);
   } catch (e: any) {
+    // Graceful fallback: if DB is missing, tell user to message on Telegram
+    if (e.name === 'PrismaClientInitializationError') {
+      return NextResponse.json(
+        { fallback: true, message: 'Order received. Please confirm via Telegram @narote' },
+        { status: 200 }
+      );
+    }
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
