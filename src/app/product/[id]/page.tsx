@@ -9,7 +9,12 @@ import { AddToCartButton } from '@/components/AddToCartButton';
 import { ShareButton } from '@/components/ShareButton';
 import type { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
+
+export async function generateStaticParams() {
+  const products = await prisma.product.findMany({ select: { id: true } });
+  return products.map((p) => ({ id: p.id }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
