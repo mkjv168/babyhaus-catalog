@@ -34,6 +34,8 @@ export function AddToCartButton({ product, variant = 'card' }: AddToCartButtonPr
       name: product.name,
       price: product.price,
       imageUrl: product.imageUrl,
+      brand: product.brand,
+      category: product.category,
       stockStatus: product.stockStatus,
     });
 

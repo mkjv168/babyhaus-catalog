@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ProductImage } from './ProductImage';
 import { AddToCartButton } from './AddToCartButton';
+import { WishlistButton } from './WishlistButton';
 
 interface Product {
   id: string;
@@ -50,6 +51,9 @@ export function CompactProductCard({ product }: CompactProductCardProps) {
               Featured
             </span>
           )}
+          <div className="absolute top-2 right-2">
+            <WishlistButton product={product} />
+          </div>
         </div>
         <div className="p-3 pb-2">
           <p className="text-[#d4a574] text-[10px] font-bold tracking-wide uppercase mb-1">

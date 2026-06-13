@@ -16,7 +16,7 @@ interface CheckoutFormData {
 
 export function CheckoutForm() {
   const router = useRouter();
-  const { cart, clearCart, getCartTotal } = useCart();
+  const { items, clearCart, totalPrice } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState<CheckoutFormData>({
@@ -39,7 +39,7 @@ export function CheckoutForm() {
 
     try {
       // Create orders for each item in cart
-      const orderPromises = cart.map(item => 
+      const orderPromises = items.map(item => 
         fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -72,7 +72,7 @@ export function CheckoutForm() {
     }
   };
 
-  const total = getCartTotal();
+  const total = totalPrice;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -202,7 +202,7 @@ export function CheckoutForm() {
 
             <button
               type="submit"
-              disabled={loading || cart.length === 0}
+              disabled={loading || items.length === 0}
               className="w-full px-8 py-4 bg-[#d4a574] text-white font-bold rounded-full hover:bg-[#c49464] transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg"
             >
               {loading ? 'Placing Order...' : `Place Order • $${total.toFixed(2)}`}
@@ -216,7 +216,7 @@ export function CheckoutForm() {
             <h2 className="text-lg font-bold text-[#2d2d2d] mb-4">Order Summary</h2>
             
             <div className="space-y-4 mb-6">
-              {cart.map((item) => (
+              {items.map((item) => (
                 <div key={item.id} className="flex gap-4">
                   <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-[#f5f1ec]">
                     <ProductImage
@@ -230,7 +230,7 @@ export function CheckoutForm() {
                     <h3 className="font-semibold text-[#2d2d2d] text-sm">{item.name}</h3>
                     <p className="text-xs text-[#7a7a7a] mt-1">Qty: {item.quantity}</p>
                     <p className="font-semibold text-[#d4a574] mt-1">
-                      ${(item.price * item.quantity).toFixed(2)}
+                      ${item.price ? (item.price * item.quantity).toFixed(2) : 'Ask'}
                     </p>
                   </div>
                 </div>

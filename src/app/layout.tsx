@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
+import { WishlistProvider } from "@/context/WishlistContext";
 import { CartDrawer } from "@/components/CartDrawer";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { Toaster } from "sonner";
@@ -71,19 +72,21 @@ export default function RootLayout({
       </head>
       <body className="antialiased pb-16 md:pb-0">
         <CartProvider>
-          {children}
-          <CartDrawer />
-          <MobileBottomNav />
-          <Toaster 
-            position="top-center" 
-            toastOptions={{
-              style: {
-                background: '#2d2d2d',
-                color: '#faf8f5',
-                borderRadius: '12px',
-              },
-            }}
-          />
+          <WishlistProvider>
+            {children}
+            <CartDrawer />
+            <MobileBottomNav />
+            <Toaster 
+              position="top-center" 
+              toastOptions={{
+                style: {
+                  background: '#2d2d2d',
+                  color: '#faf8f5',
+                  borderRadius: '12px',
+                },
+              }}
+            />
+          </WishlistProvider>
         </CartProvider>
       </body>
     </html>
