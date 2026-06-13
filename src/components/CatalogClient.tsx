@@ -197,8 +197,8 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
       <div className="flex-1">
         {/* Results header */}
         <div className="flex items-center justify-between gap-3 mb-4">
-          <p className="text-sm text-[#7a7a7a]">
-            <span className="font-semibold text-[#2d2d2d]">{filteredProducts.length}</span> product
+          <p className="text-sm text-[#a0a0a0]">
+            <span className="font-semibold text-white">{filteredProducts.length}</span> product
             {filteredProducts.length !== 1 ? 's' : ''}
             {currentPage > 1 && ` • Page ${currentPage}`}
           </p>
@@ -207,7 +207,7 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
 
         {/* Product Grid */}
         {filteredProducts.length === 0 ? (
-          <div className="text-center py-16 text-[#7a7a7a]">
+          <div className="text-center py-16 text-[#a0a0a0]">
             <p className="text-4xl mb-3">🔍</p>
             <p className="text-base font-medium">No products found</p>
             <p className="text-sm mt-1">Try adjusting your search or category filter</p>

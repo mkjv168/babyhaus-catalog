@@ -1,0 +1,30 @@
+You are a frontend engineer. Redesign the BabyHaus storefront to match a new Y2K retro candy dark-mode brand identity.
+
+## Instructions
+1. Read `/home/jarvisp/projects/babyhaus-catalog/DESIGN.md` first — it contains the complete design token spec, color palette, typography, and per-component redesign instructions.
+2. Read each target file, then rewrite it to match the spec. Keep all existing logic, hooks, data fetching, and functionality intact — only change visual presentation (colors, fonts, spacing, borders, backgrounds).
+3. Do NOT touch any `/admin/*` files or API routes.
+4. After all edits, run `npm run build` in `/home/jarvisp/projects/babyhaus-catalog`. Fix any TypeScript/build errors.
+5. Report a concise summary of every file you changed and what you did.
+
+## Target Files (read each, then rewrite)
+- `src/app/globals.css` — dark theme CSS variables, grain texture, gradient text utility, scrollbar, selection
+- `src/app/layout.tsx` — themeColor, load Fredoka + Inter fonts, dark Toaster
+- `src/app/page.tsx` — dark hero with radial glow, multicolor title, gradient CTA, grain bg
+- `src/app/product/[id]/page.tsx` — dark product detail, gradient price, dark stock badges, gradient CTAs
+- `src/components/Header.tsx` — dark sticky header, Fredoka logo, dark icon buttons
+- `src/components/Footer.tsx` — dark footer, pink links
+- `src/components/CompactProductCard.tsx` — dark cards, gradient price, dark stock badges, gradient add-to-cart
+- `src/components/CatalogClient.tsx` — dark search input, dark pagination
+- `src/components/CartDrawer.tsx` — dark drawer, gradient checkout button
+- `src/components/MobileBottomNav.tsx` — dark bottom nav, pink active state
+- `src/components/ProductQuickView.tsx` — dark sheet, gradient CTAs
+
+## Key Rules
+- All warm cream/beige colors (`#faf8f5`, `#f5f1ec`, `#e8e4df`, `#d4a574`) must be replaced with dark tokens from DESIGN.md.
+- Use the exact hex values from DESIGN.md.
+- `Fredoka` must be loaded from Google Fonts and used for headings/logo.
+- Add a subtle grain texture overlay to the main layout or body.
+- Gradient text for prices and key CTAs.
+- Keep all responsive behavior, all existing component props, all existing imports.
+- Do not rename files. Do not move files. Patch in place.

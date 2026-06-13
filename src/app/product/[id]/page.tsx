@@ -56,15 +56,15 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
   );
 
   return (
-    <main className="min-h-screen bg-[#faf8f5] text-[#2d2d2d]">
+    <main className="min-h-screen bg-[#0a0a0a] text-[#ffffff]">
       <Header />
 
       {/* Sticky back button bar */}
-      <div className="sticky top-14 z-30 bg-[#faf8f5]/90 backdrop-blur-sm border-b border-[#e8e4df]">
+      <div className="sticky top-14 z-30 bg-[#0a0a0a]/90 backdrop-blur-sm border-b border-white/5">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <Link
             href="/"
-            className="inline-flex items-center gap-1 text-sm text-[#7a7a7a] hover:text-[#d4a574] transition-colors"
+            className="inline-flex items-center gap-1 text-sm text-[#a0a0a0] hover:text-[#FF4D9F] transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             Back to Catalog
@@ -79,22 +79,22 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
 
           {/* Info */}
           <div className="flex flex-col">
-            <p className="text-[#d4a574] text-xs font-bold tracking-wide uppercase mb-1">
+            <p className="text-gradient text-xs font-bold tracking-wide uppercase mb-1">
               {product.brand || product.category}
             </p>
-            <h1 className="text-2xl md:text-3xl font-bold mb-3 leading-tight">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-3 leading-tight font-['Fredoka']">{product.name}</h1>
 
             <div className="mb-4 flex items-center flex-wrap gap-2">
-              <span className="text-2xl md:text-3xl font-bold text-[#d4a574]">
+              <span className="text-2xl md:text-3xl font-bold text-gradient">
                 {product.price ? `$${product.price.toFixed(2)}` : 'Ask for Price'}
               </span>
               <span
-                className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                className={`text-xs font-bold px-2.5 py-1 rounded-full border ${
                   product.stockStatus === 'instock'
-                    ? 'bg-green-50 text-green-600'
+                    ? 'bg-green-500/10 text-green-400 border-green-500/20'
                     : product.stockStatus === 'preorder'
-                    ? 'bg-amber-50 text-amber-600'
-                    : 'bg-red-50 text-red-600'
+                    ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                    : 'bg-red-500/10 text-red-400 border-red-500/20'
                 }`}
               >
                 {product.stockStatus === 'instock'
@@ -128,7 +128,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                 href={`https://t.me/narote?text=${telegramMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-[#d4a574] text-white font-bold rounded-2xl hover:bg-[#c49464] transition-colors text-center shadow-sm text-base"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#FF4D9F] via-[#FFB347] to-[#39FF14] text-white font-bold rounded-2xl hover:shadow-lg hover:shadow-pink-500/25 transition-all duration-200 text-center text-base"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 Order via Telegram
@@ -136,7 +136,7 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               {product.stockStatus !== 'outofstock' && (
                 <Link
                   href={`/order/${product.id}`}
-                  className="inline-flex items-center justify-center px-6 py-3 border border-[#e8e4df] text-[#2d2d2d] font-semibold rounded-2xl hover:border-[#d4a574] hover:text-[#d4a574] transition-colors text-center bg-white/60"
+                  className="inline-flex items-center justify-center px-6 py-3 border border-white/10 text-[#ffffff] font-semibold rounded-2xl hover:border-[#FF4D9F] hover:text-[#FF4D9F] transition-colors text-center bg-[#141414]/60"
                 >
                   Submit Order Request
                 </Link>

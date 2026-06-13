@@ -54,7 +54,7 @@ export function ShareButton({ productId, productName, className = '' }: ShareBut
   return (
     <button
       onClick={handleShare}
-      className={`inline-flex items-center gap-1.5 p-2 text-[#7a7a7a] hover:text-[#d4a574] transition-colors ${className}`}
+      className={`inline-flex items-center gap-1.5 p-2 text-[#a0a0a0] hover:text-[#FF4D9F] transition-colors ${className}`}
       title="Share product"
     >
       {copied ? (
