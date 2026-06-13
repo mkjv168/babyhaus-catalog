@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { ProductImage } from '@/components/ProductImage';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { ProductDetailClient } from '@/components/ProductDetailClient';
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,17 +19,22 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     <main className="min-h-screen bg-[#faf8f5] text-[#2d2d2d]">
       <Header />
 
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-6">
+      {/* Sticky back button bar */}
+      <div className="sticky top-14 z-30 bg-[#faf8f5]/90 backdrop-blur-sm border-b border-[#e8e4df]">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <Link
             href="/"
-            className="text-sm text-[#7a7a7a] hover:text-[#d4a574] transition-colors inline-flex items-center gap-1"
+            className="inline-flex items-center gap-1 text-sm text-[#7a7a7a] hover:text-[#d4a574] transition-colors"
           >
-            &larr; Back to Catalog
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Back to Catalog
           </Link>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+          {/* Image */}
           <div className="aspect-square relative bg-[#f5f1ec] rounded-2xl overflow-hidden border border-[#e8e4df]">
             <ProductImage
               src={product.imageUrl}
@@ -37,21 +43,19 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             />
           </div>
 
-          <div className="flex flex-col justify-center">
-            <p className="text-[#d4a574] text-sm font-semibold tracking-wide uppercase mb-2">
+          {/* Info */}
+          <div className="flex flex-col">
+            <p className="text-[#d4a574] text-xs font-bold tracking-wide uppercase mb-1">
               {product.brand || product.category}
             </p>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-4">{product.name}</h1>
-            <p className="text-[#7a7a7a] text-lg mb-6 leading-relaxed">
-              {product.description}
-            </p>
+            <h1 className="text-2xl md:text-3xl font-bold mb-3 leading-tight">{product.name}</h1>
 
-            <div className="mb-6 flex items-center flex-wrap gap-3">
-              <span className="text-3xl font-bold text-[#d4a574]">
+            <div className="mb-4 flex items-center flex-wrap gap-2">
+              <span className="text-2xl md:text-3xl font-bold text-[#d4a574]">
                 {product.price ? `$${product.price.toFixed(2)}` : 'Ask for Price'}
               </span>
               <span
-                className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                   product.stockStatus === 'instock'
                     ? 'bg-green-50 text-green-600'
                     : product.stockStatus === 'preorder'
@@ -67,28 +71,29 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
               </span>
             </div>
 
-            {product.sku && (
-              <p className="text-sm text-[#7a7a7a] mb-8">SKU: {product.sku}</p>
-            )}
-
-            <div className="flex flex-col gap-3">
+            {/* Primary CTA */}
+            <div className="flex flex-col gap-2 mb-5">
+              <a
+                href={`https://t.me/narote?text=${telegramMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-4 bg-[#d4a574] text-white font-bold rounded-2xl hover:bg-[#c49464] transition-colors text-center shadow-sm text-base md:text-lg"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Order via Telegram
+              </a>
               {product.stockStatus !== 'outofstock' && (
                 <Link
                   href={`/order/${product.id}`}
-                  className="inline-flex items-center justify-center px-8 py-4 bg-[#d4a574] text-white font-semibold rounded-full hover:bg-[#c49464] transition-colors text-center shadow-sm"
+                  className="inline-flex items-center justify-center px-6 py-3 border border-[#e8e4df] text-[#2d2d2d] font-semibold rounded-2xl hover:border-[#d4a574] hover:text-[#d4a574] transition-colors text-center bg-white/60"
                 >
-                  Place Order Request
+                  Submit Order Request
                 </Link>
               )}
-              <a
-                href={`https://t.me/narotee?text=${telegramMessage}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center px-8 py-4 border border-[#e8e4df] text-[#2d2d2d] font-semibold rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors text-center bg-white/60"
-              >
-                Chat on Telegram
-              </a>
             </div>
+
+            {/* Collapsible specs */}
+            <ProductDetailClient product={product} />
           </div>
         </div>
       </section>

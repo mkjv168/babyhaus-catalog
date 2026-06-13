@@ -1,9 +1,18 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 export const metadata: Metadata = {
   title: "Baby Haus | Premium Baby Products Cambodia",
   description: "High quality baby products from USA & Japan. Online based in Cambodia.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: "#faf8f5",
 };
 
 export default function RootLayout({
@@ -21,7 +30,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased pb-16 md:pb-0">
+        {children}
+        <MobileBottomNav />
+      </body>
     </html>
   );
 }

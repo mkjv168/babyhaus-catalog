@@ -38,7 +38,7 @@ export default function OrderForm({ productId, productName, productPrice }: { pr
         <h2 className="text-2xl font-bold text-[#d4a574] mb-3">Order Request Received!</h2>
         <p className="text-[#7a7a7a] mb-6">Thank you, {name}! We have saved your request.</p>
         <a
-          href={`https://t.me/narotee?text=${telegramMessage}`}
+          href={`https://t.me/narote?text=${telegramMessage}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center px-8 py-4 bg-[#d4a574] text-white font-semibold rounded-full hover:bg-[#c49464] transition-colors"
