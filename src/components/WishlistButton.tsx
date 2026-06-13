@@ -29,14 +29,14 @@ export function WishlistButton({ product }: WishlistButtonProps) {
   return (
     <button
       onClick={handleClick}
-      className="flex items-center justify-center w-8 h-8 rounded-full bg-[#141414]/80 backdrop-blur-sm transition-all hover:scale-110 hover:bg-white active:scale-95 shadow-sm"
+      className="flex items-center justify-center w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm transition-all hover:scale-110 hover:bg-white active:scale-95 shadow-sm"
       aria-label={inWishlist ? "Remove from favorites" : "Add to favorites"}
     >
       <Heart
         className={`w-4 h-4 transition-colors ${
           inWishlist
             ? 'fill-red-500 text-red-500'
-            : 'text-[#a0a0a0] hover:text-red-500'
+            : 'text-[#7a7a7a] hover:text-red-500'
         }`}
       />
     </button>

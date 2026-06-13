@@ -28,7 +28,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="p-2 rounded-lg border border-white/10 text-white hover:border-[#FF4D9F] hover:text-[#FF4D9F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-2 rounded-lg border border-[#e8e4df] hover:border-[#d4a574] hover:text-[#d4a574] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Previous page"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -42,11 +42,11 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
           <>
             <button
               onClick={() => onPageChange(1)}
-              className="w-10 h-10 rounded-lg border border-white/10 text-white hover:border-[#FF4D9F] hover:text-[#FF4D9F] transition-colors text-sm font-medium"
+              className="w-10 h-10 rounded-lg border border-[#e8e4df] hover:border-[#d4a574] hover:text-[#d4a574] transition-colors text-sm font-medium"
             >
               1
             </button>
-            {startPage > 2 && <span className="px-2 self-center text-[#6b6b6b]">...</span>}
+            {startPage > 2 && <span className="px-2 self-center text-[#7a7a7a]">...</span>}
           </>
         )}
         
@@ -56,8 +56,8 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
             onClick={() => onPageChange(page)}
             className={`w-10 h-10 rounded-lg border text-sm font-medium transition-colors ${
               page === currentPage
-                ? 'bg-gradient-to-r from-[#FF4D9F] to-[#FFB347] border-transparent text-white'
-                : 'border-white/10 text-white hover:border-[#FF4D9F] hover:text-[#FF4D9F]'
+                ? 'bg-[#d4a574] border-[#d4a574] text-white'
+                : 'border-[#e8e4df] hover:border-[#d4a574] hover:text-[#d4a574]'
             }`}
           >
             {page}
@@ -66,10 +66,10 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
         
         {endPage < totalPages && (
           <>
-            {endPage < totalPages - 1 && <span className="px-2 self-center text-[#6b6b6b]">...</span>}
+            {endPage < totalPages - 1 && <span className="px-2 self-center text-[#7a7a7a]">...</span>}
             <button
               onClick={() => onPageChange(totalPages)}
-              className="w-10 h-10 rounded-lg border border-white/10 text-white hover:border-[#FF4D9F] hover:text-[#FF4D9F] transition-colors text-sm font-medium"
+              className="w-10 h-10 rounded-lg border border-[#e8e4df] hover:border-[#d4a574] hover:text-[#d4a574] transition-colors text-sm font-medium"
             >
               {totalPages}
             </button>
@@ -81,7 +81,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="p-2 rounded-lg border border-white/10 text-white hover:border-[#FF4D9F] hover:text-[#FF4D9F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="p-2 rounded-lg border border-[#e8e4df] hover:border-[#d4a574] hover:text-[#d4a574] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Next page"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

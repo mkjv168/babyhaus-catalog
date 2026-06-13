@@ -17,12 +17,12 @@ interface ProductDetailClientProps {
 function Accordion({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border border-white/10 rounded-xl overflow-hidden bg-[#141414] mb-2">
+    <div className="border border-[#e8e4df] rounded-xl overflow-hidden bg-white mb-2">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-4 py-3 text-left"
       >
-        <span className="text-sm font-bold text-white">{title}</span>
+        <span className="text-sm font-bold text-[#2d2d2d]">{title}</span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -33,13 +33,13 @@ function Accordion({ title, children, defaultOpen = false }: { title: string; ch
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`text-[#a0a0a0] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`text-[#7a7a7a] transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         >
           <path d="m6 9 6 6 6-6" />
         </svg>
       </button>
       {open && (
-        <div className="px-4 pb-4 text-sm text-[#a0a0a0] leading-relaxed">
+        <div className="px-4 pb-4 text-sm text-[#7a7a7a] leading-relaxed">
           {children}
         </div>
       )}
@@ -59,23 +59,23 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
         <div className="space-y-2">
           {product.sku && (
             <div className="flex justify-between">
-              <span className="text-[#a0a0a0]">SKU</span>
-              <span className="font-medium text-white">{product.sku}</span>
+              <span className="text-[#7a7a7a]">SKU</span>
+              <span className="font-medium text-[#2d2d2d]">{product.sku}</span>
             </div>
           )}
           {product.brand && (
             <div className="flex justify-between">
-              <span className="text-[#a0a0a0]">Brand</span>
-              <span className="font-medium text-white">{product.brand}</span>
+              <span className="text-[#7a7a7a]">Brand</span>
+              <span className="font-medium text-[#2d2d2d]">{product.brand}</span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-[#a0a0a0]">Category</span>
-            <span className="font-medium text-white">{product.category}</span>
+            <span className="text-[#7a7a7a]">Category</span>
+            <span className="font-medium text-[#2d2d2d]">{product.category}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-[#a0a0a0]">Availability</span>
-            <span className="font-medium text-white">
+            <span className="text-[#7a7a7a]">Availability</span>
+            <span className="font-medium text-[#2d2d2d]">
               {product.stockStatus === 'instock'
                 ? 'In Stock'
                 : product.stockStatus === 'preorder'

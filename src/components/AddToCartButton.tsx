@@ -51,7 +51,7 @@ export function AddToCartButton({ product, variant = 'card' }: AddToCartButtonPr
         disabled={product.stockStatus === 'outofstock'}
         className={`inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-center shadow-sm transition-all active:scale-[0.98] w-full ${
           product.stockStatus === 'outofstock'
-            ? 'bg-[#e8e4df] text-[#6b6b6b] cursor-not-allowed'
+            ? 'bg-[#e8e4df] text-[#b0aba5] cursor-not-allowed'
             : added
             ? 'bg-green-500 text-white'
             : 'bg-[#2d2d2d] text-white hover:bg-[#1a1a1a]'
@@ -84,7 +84,7 @@ export function AddToCartButton({ product, variant = 'card' }: AddToCartButtonPr
       disabled={product.stockStatus === 'outofstock'}
       className={`flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.98] ${
         product.stockStatus === 'outofstock'
-          ? 'bg-[#1a1a1a] text-[#6b6b6b] cursor-not-allowed'
+          ? 'bg-[#f5f1ec] text-[#b0aba5] cursor-not-allowed'
           : added
           ? 'bg-green-50 text-green-600'
           : 'bg-[#2d2d2d] text-white hover:bg-[#1a1a1a]'

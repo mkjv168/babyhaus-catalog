@@ -5,12 +5,12 @@ import { useState } from 'react';
 function AccordionSection({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="md:hidden border-b border-white/5 last:border-0">
+    <div className="md:hidden border-b border-[#e8e4df] last:border-0">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between py-3 text-left"
       >
-        <h4 className="text-sm font-semibold uppercase tracking-wide text-[#ffffff]">{title}</h4>
+        <h4 className="text-sm font-semibold uppercase tracking-wide text-[#2d2d2d]">{title}</h4>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="16"
@@ -21,7 +21,7 @@ function AccordionSection({ title, children }: { title: string; children: React.
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`text-[#a0a0a0] transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`text-[#7a7a7a] transition-transform ${open ? 'rotate-180' : ''}`}
         >
           <path d="m6 9 6 6 6-6" />
         </svg>
@@ -33,17 +33,17 @@ function AccordionSection({ title, children }: { title: string; children: React.
 
 export function Footer() {
   return (
-    <footer className="bg-[#0a0a0a] border-t border-white/5">
+    <footer className="bg-white border-t border-[#e8e4df]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
         {/* Mobile Accordion */}
         <div className="md:hidden">
           <AccordionSection title="About">
-            <p className="text-sm text-[#a0a0a0] leading-relaxed">
+            <p className="text-sm text-[#7a7a7a] leading-relaxed">
               Premium baby products sourced from the USA & Japan. Online based in Cambodia.
             </p>
           </AccordionSection>
           <AccordionSection title="Contact">
-            <ul className="space-y-2 text-sm text-[#a0a0a0]">
+            <ul className="space-y-2 text-sm text-[#7a7a7a]">
               <li className="flex items-center gap-2">
                 <span>📧</span> hello@babyhaus.kh
               </li>
@@ -61,7 +61,7 @@ export function Footer() {
                 href="https://instagram.com/babyhaus.kh"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#FF4D9F] hover:underline"
+                className="text-[#d4a574] hover:underline"
               >
                 📸 @babyhaus.kh on Instagram
               </a>
@@ -69,7 +69,7 @@ export function Footer() {
                 href="https://t.me/narote"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#FF4D9F] hover:underline"
+                className="text-[#d4a574] hover:underline"
               >
                 ✈️ Chat on Telegram
               </a>
@@ -80,19 +80,19 @@ export function Footer() {
         {/* Desktop Grid */}
         <div className="hidden md:grid grid-cols-3 gap-10">
           <div>
-            <p className="text-xl font-bold mb-3 font-['Fredoka']">
-              <span className="text-gradient">Baby</span>
-              <span className="text-white">Haus</span>
+            <p className="text-xl font-bold mb-3">
+              <span className="text-[#d4a574]">Baby</span>
+              <span className="text-[#2d2d2d]">Haus</span>
             </p>
-            <p className="text-[#a0a0a0] text-sm leading-relaxed">
+            <p className="text-[#7a7a7a] text-sm leading-relaxed">
               Premium baby products sourced from the USA & Japan. Online based in Cambodia.
             </p>
           </div>
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wide text-[#ffffff] mb-3">
+            <h4 className="text-sm font-semibold uppercase tracking-wide text-[#2d2d2d] mb-3">
               Contact
             </h4>
-            <ul className="space-y-2 text-sm text-[#a0a0a0]">
+            <ul className="space-y-2 text-sm text-[#7a7a7a]">
               <li className="flex items-center gap-2">
                 <span>📧</span> hello@babyhaus.kh
               </li>
@@ -105,7 +105,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="text-sm font-semibold uppercase tracking-wide text-[#ffffff] mb-3">
+            <h4 className="text-sm font-semibold uppercase tracking-wide text-[#2d2d2d] mb-3">
               Follow Us
             </h4>
             <div className="flex flex-col gap-2 text-sm">
@@ -113,7 +113,7 @@ export function Footer() {
                 href="https://instagram.com/babyhaus.kh"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#FF4D9F] hover:underline"
+                className="text-[#d4a574] hover:underline"
               >
                 📸 @babyhaus.kh on Instagram
               </a>
@@ -121,7 +121,7 @@ export function Footer() {
                 href="https://t.me/narote"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#FF4D9F] hover:underline"
+                className="text-[#d4a574] hover:underline"
               >
                 ✈️ Chat on Telegram
               </a>
@@ -129,13 +129,13 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-6 md:mt-10 pt-4 md:pt-6 border-t border-white/5 flex items-center justify-center md:justify-between gap-3 text-xs text-[#a0a0a0]">
+        <div className="mt-6 md:mt-10 pt-4 md:pt-6 border-t border-[#e8e4df] flex items-center justify-center md:justify-between gap-3 text-xs text-[#7a7a7a]">
           <p>
             &copy; {new Date().getFullYear()} Baby Haus. All rights reserved.
           </p>
           <a 
             href="/admin" 
-            className="hover:text-[#FF4D9F] transition-colors"
+            className="hover:text-[#d4a574] transition-colors"
           >
             Admin Portal
           </a>

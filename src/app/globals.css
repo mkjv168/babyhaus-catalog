@@ -1,56 +1,29 @@
 @import 'tailwindcss';
 
 :root {
-  --bg-primary: #0a0a0a;
-  --bg-surface: #141414;
-  --bg-elevated: #1a1a1a;
-  --text-primary: #ffffff;
-  --text-secondary: #a0a0a0;
-  --text-muted: #6b6b6b;
-  --accent-pink: #FF4D9F;
-  --accent-orange: #FFB347;
-  --accent-green: #39FF14;
-  --accent-blue: #6495ED;
-  --accent-periwinkle: #A0C4FF;
-  --border: rgba(255,255,255,0.08);
-  --border-strong: rgba(255,255,255,0.15);
+  --bg-warm: #faf8f5;
+  --bg-cream: #f5f1ec;
+  --surface: #ffffff;
+  --text-primary: #2d2d2d;
+  --text-secondary: #7a7a7a;
+  --accent: #d4a574;
+  --accent-hover: #c49464;
+  --accent-light: #f5ebe0;
+  --border: #e8e4df;
+  --success: #7ec8a0;
+  --danger: #e07a7a;
 }
 
 body {
-  background-color: var(--bg-primary);
+  background-color: var(--bg-warm);
   color: var(--text-primary);
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-tap-highlight-color: transparent;
 }
 
 ::selection {
-  background: rgba(255, 77, 159, 0.3);
+  background: rgba(212, 165, 116, 0.3);
   color: var(--text-primary);
-}
-
-/* Grain texture overlay */
-.grain::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  z-index: 9999;
-}
-
-/* Gradient text utility */
-.text-gradient {
-  background: linear-gradient(135deg, #FF4D9F, #FFB347, #39FF14);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Sticker outline text for special headings */
-.text-sticker {
-  color: #FF4D9F;
-  text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff;
 }
 
 /* Scrollbar */
@@ -58,14 +31,14 @@ body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-primary);
+  background: var(--bg-warm);
 }
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: #d4cfc7;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent-pink);
+  background: var(--accent);
 }
 
 /* Hide scrollbar for category pills but keep functionality */
