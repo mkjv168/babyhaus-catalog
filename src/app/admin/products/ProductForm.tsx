@@ -22,7 +22,17 @@ interface ProductData {
   featured: boolean;
 }
 
-export default function ProductForm({ initial, productId }: { initial?: ProductData; productId?: string }) {
+export default function ProductForm({
+  initial,
+  productId,
+  onSuccess,
+  onCancel,
+}: {
+  initial?: ProductData;
+  productId?: string;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}) {
   const router = useRouter();
   const [form, setForm] = useState<ProductData>(initial || {
     name: '', brand: '', category: '', description: '', price: '', imageUrl: '', sku: '', stockStatus: 'instock', featured: false,
@@ -46,8 +56,12 @@ export default function ProductForm({ initial, productId }: { initial?: ProductD
       const method = productId ? 'PUT' : 'POST';
       const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       if (res.ok) {
-        router.push('/admin/products');
-        router.refresh();
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push('/admin/products');
+          router.refresh();
+        }
       } else {
         const data = await res.json();
         setError(data.error || 'Failed to save');
@@ -107,12 +121,26 @@ export default function ProductForm({ initial, productId }: { initial?: ProductD
         <span className="text-sm font-semibold text-[#7a7a7a]">Featured Product</span>
       </label>
       <div className="flex gap-3 pt-2">
-        <button type="submit" disabled={loading || imageUploading} className="px-8 py-3 bg-[#d4a574] text-white font-semibold rounded-full hover:bg-[#c49464] transition-colors disabled:opacity-50">
-          {imageUploading ? 'Uploading image...' : loading ? 'Saving...' : (productId ? 'Update Product' : 'Create Product')}
+        <button
+          type="submit"
+          disabled={loading || imageUploading}
+          className="px-8 py-3 bg-[#d4a574] text-white font-semibold rounded-full hover:bg-[#c49464] transition-colors disabled:opacity-50"
+        >
+          {loading ? 'Saving...' : (productId ? 'Update Product' : 'Create Product')}
         </button>
-        <a href="/admin/products" className="px-8 py-3 border border-[#e8e4df] text-[#2d2d2d] font-semibold rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors">
-          Cancel
-        </a>
+        {onCancel ? (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-8 py-3 border border-[#e8e4df] text-[#2d2d2d] font-semibold rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors"
+          >
+            Cancel
+          </button>
+        ) : (
+          <a href="/admin/products" className="px-8 py-3 border border-[#e8e4df] text-[#2d2d2d] font-semibold rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors">
+            Cancel
+          </a>
+        )}
       </div>
     </form>
   );

@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-export default function DeleteButton({ id }: { id: string }) {
+export default function DeleteButton({ id, onDelete }: { id: string; onDelete?: () => void }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -12,7 +12,13 @@ export default function DeleteButton({ id }: { id: string }) {
     setLoading(true);
     try {
       const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-      if (res.ok) router.refresh();
+      if (res.ok) {
+        if (onDelete) {
+          onDelete();
+        } else {
+          router.refresh();
+        }
+      }
     } catch (e) {
       console.error(e);
     } finally {
