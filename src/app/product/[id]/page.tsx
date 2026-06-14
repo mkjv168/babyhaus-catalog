@@ -8,6 +8,7 @@ import { ProductDetailClient } from '@/components/ProductDetailClient';
 import { AddToCartButton } from '@/components/AddToCartButton';
 import { ShareButton } from '@/components/ShareButton';
 import ProductGallery from '@/components/ProductGallery';
+import { ProductVariantSelector } from '@/components/ProductVariantSelector';
 import type { Metadata } from 'next';
 
 export const revalidate = 60;
@@ -20,11 +21,9 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const product = await prisma.product.findUnique({ where: { id } });
-  
+
   if (!product) {
-    return {
-      title: 'Product Not Found | Baby Haus',
-    };
+    return { title: 'Product Not Found | Baby Haus' };
   }
 
   return {
@@ -32,7 +31,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     description: product.description || `Shop ${product.name} from ${product.brand || product.category}. Premium baby products imported from USA and Japan. Order via Telegram for fast delivery in Cambodia.`,
     openGraph: {
       title: product.name,
-      description: product.description || `Premium ${product.category} from Baby Haus`,
+      description: `Premium ${product.category} from Baby Haus`,
       images: product.imageUrl ? [product.imageUrl] : undefined,
       type: 'website',
     },
@@ -41,14 +40,26 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await prisma.product.findUnique({ 
+  const product = await prisma.product.findUnique({
     where: { id },
     include: { images: { orderBy: { order: 'asc' } } },
   });
   if (!product) notFound();
 
-  const imageUrls = product.images.length > 0 
-    ? product.images.map(img => img.url)
+  // Fetch sibling variants if this product belongs to a group
+  const siblings = product.variantGroup
+    ? await prisma.product.findMany({
+        where: { variantGroup: product.variantGroup },
+        include: { images: { orderBy: { order: 'asc' } } },
+        orderBy: { name: 'asc' },
+      })
+    : [];
+
+  const allVariants = [product, ...siblings.filter((s) => s.id !== product.id)];
+  const hasVariants = allVariants.length > 1;
+
+  const imageUrls = product.images.length > 0
+    ? product.images.map((img) => img.url)
     : product.imageUrl ? [product.imageUrl] : [];
 
   const telegramMessage = encodeURIComponent(
@@ -84,6 +95,23 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
             </p>
             <h1 className="text-2xl md:text-3xl font-bold mb-3 leading-tight">{product.name}</h1>
 
+            {/* Variant Selector */}
+            {hasVariants && (
+              <ProductVariantSelector
+                variants={allVariants.map((v) => ({
+                  id: v.id,
+                  name: v.name,
+                  price: v.price,
+                  stockStatus: v.stockStatus,
+                  stockQuantity: v.stockQuantity,
+                  sku: v.sku,
+                  imageUrl: v.imageUrl,
+                }))}
+                currentId={product.id}
+                groupSlug={product.variantGroup!}
+              />
+            )}
+
             <div className="mb-4 flex items-center flex-wrap gap-2">
               <span className="text-2xl md:text-3xl font-bold text-[#FF6B9D]">
                 {product.price ? `$${product.price.toFixed(2)}` : 'Ask for Price'}
@@ -103,11 +131,12 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
                   ? 'Pre-Order'
                   : 'Out of Stock'}
               </span>
-              <ShareButton 
-                productId={product.id} 
-                productName={product.name} 
-                className="ml-auto"
-              />
+              {product.sku && (
+                <span className="text-[10px] text-[#7a7a7a] font-mono bg-[#f5f1ec] px-2 py-0.5 rounded">
+                  SKU: {product.sku}
+                </span>
+              )}
+              <ShareButton productId={product.id} productName={product.name} className="ml-auto" />
             </div>
 
             {/* Primary CTA */}

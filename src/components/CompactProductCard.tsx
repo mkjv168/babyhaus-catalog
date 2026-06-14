@@ -22,6 +22,7 @@ interface Product {
   sku?: string | null;
   stockStatus: string;
   featured: boolean;
+  variantGroup?: string | null;
   images?: ProductImageData[];
 }
 
@@ -75,9 +76,16 @@ export function CompactProductCard({ product, onQuickView }: CompactProductCardP
           )}
         </div>
         <div className="p-3 pb-2">
-          <p className="text-[#FF6B9D] text-[10px] font-bold tracking-wide uppercase mb-1">
-            {product.brand || product.category}
-          </p>
+          <div className="flex items-center gap-1.5 mb-1">
+            <p className="text-[#FF6B9D] text-[10px] font-bold tracking-wide uppercase">
+              {product.brand || product.category}
+            </p>
+            {product.variantGroup && (
+              <span className="text-[9px] font-bold text-[#7a7a7a] bg-[#f5f1ec] px-1.5 py-0 rounded-full">
+                Multiple sizes
+              </span>
+            )}
+          </div>
           <h3 className="text-sm font-bold text-[#2D2D2D] group-hover:text-[#FF6B9D] transition-colors line-clamp-2 leading-snug mb-2 min-h-[2.5rem]">
             {product.name}
           </h3>

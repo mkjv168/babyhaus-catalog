@@ -33,6 +33,7 @@ interface Product {
   stockStatus: string;
   stockQuantity: number;
   featured: boolean;
+  variantGroup: string | null;
   images: ProductImage[];
 }
 
@@ -151,6 +152,9 @@ export default function AdminCommandCenter({
   // ─ Sort
   const [sortBy, setSortBy] = useState<'name' | 'price_asc' | 'price_desc' | 'stock_asc' | 'stock_desc'>('name');
 
+  // ─ Group expansion
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
   // ─ Toast
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
@@ -209,6 +213,23 @@ export default function AdminCommandCenter({
     });
     return counts;
   }, [products]);
+
+  const productGroups = useMemo(() => {
+    const map = new Map<string, Product[]>();
+    filteredProducts.forEach((p) => {
+      const key = p.variantGroup || p.id;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(p);
+    });
+    return Array.from(map.entries()).map(([slug, variants]) => ({
+      slug,
+      name: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+      variants: variants.sort((a, b) => a.name.localeCompare(b.name)),
+      totalStock: variants.reduce((s, v) => s + v.stockQuantity, 0),
+      allOutOfStock: variants.every((v) => v.stockStatus === 'outofstock'),
+      hasMultiple: variants.length > 1,
+    }));
+  }, [filteredProducts]);
 
   const allProductImages = useCallback((p: Product) => {
     const urls: string[] = [];
@@ -311,6 +332,15 @@ export default function AdminCommandCenter({
     });
     showToast('Stock updated', 'success');
     router.refresh();
+  };
+
+  const toggleGroupExpansion = (slug: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return next;
+    });
   };
 
   // ─ Keyboard shortcuts
@@ -477,7 +507,7 @@ export default function AdminCommandCenter({
               <div className="w-[380px] min-w-[320px] bg-[#faf8f5] border-r border-[#e8e4df] flex flex-col">
                 <div className="px-4 py-3 border-b border-[#e8e4df] bg-white flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold">{filteredProducts.length} products</p>
+                    <p className="text-sm font-bold">{productGroups.length} groups</p>
                     {selectedIds.size > 0 && <p className="text-xs text-[#d4a574] font-medium">{selectedIds.size} selected</p>}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -526,34 +556,51 @@ export default function AdminCommandCenter({
                   </div>
                 )}
                 <div className="flex-1 overflow-y-auto">
-                  {filteredProducts.map((p) => (
-                    <div key={p.id} onClick={() => handleSelectProduct(p.id)} className={`group flex items-center gap-3 px-4 py-2.5 border-b border-[#e8e4df]/50 cursor-pointer transition-all duration-150 ${selectedProductId === p.id ? 'bg-white shadow-sm ring-1 ring-[#d4a574]/20' : 'hover:bg-white/60'}`}>
-                      <input type="checkbox" checked={selectedIds.has(p.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(p.id); }} className="w-4 h-4 accent-[#d4a574] rounded shrink-0 cursor-pointer" />
-                      <div className="w-9 h-9 relative bg-[#f5f1ec] rounded-lg overflow-hidden shrink-0 border border-[#e8e4df]/60">{p.imageUrl ? <Image src={p.imageUrl} alt={p.name} fill className="object-cover" /> : <span className="text-xs flex items-center justify-center h-full text-[#7a7a7a]">👶</span>}</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-sm font-semibold text-[#2d2d2d] truncate">{p.name}</p>
-                          {p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}
+                  {productGroups.map((group) => {
+                    const isExpanded = expandedGroups.has(group.slug) || group.variants.some((v) => v.id === selectedProductId);
+                    return (
+                      <div key={group.slug} className="border-b border-[#e8e4df]/50">
+                        <div onClick={() => toggleGroupExpansion(group.slug)} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all duration-150 ${group.allOutOfStock ? 'bg-red-50/40' : 'bg-[#faf8f5] hover:bg-white/60'}`}>
+                          <ChevronRight className={`w-3.5 h-3.5 text-[#7a7a7a] shrink-0 transition-transform duration-150 ${isExpanded ? 'rotate-90' : ''}`} />
+                          <div className="w-9 h-9 relative bg-[#f5f1ec] rounded-lg overflow-hidden shrink-0 border border-[#e8e4df]/60">{group.variants[0].imageUrl ? <Image src={group.variants[0].imageUrl} alt={group.name} fill className="object-cover" /> : <span className="text-xs flex items-center justify-center h-full text-[#7a7a7a]">👶</span>}</div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-[#2d2d2d] truncate">{group.name}</p>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-[#7a7a7a]">{group.variants.length} variant{group.variants.length !== 1 ? 's' : ''}</span>
+                              <span className="text-[10px] text-[#d4a574] font-semibold">Stock: {group.totalStock}</span>
+                            </div>
+                          </div>
+                          {group.allOutOfStock && <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full shrink-0">Out of Stock</span>}
                         </div>
-                        <div className="flex items-center gap-2 mt-0">
-                          <span className="text-[10px] text-[#7a7a7a]">{p.category}</span>
-                          <span className="text-[10px] text-[#d4a574] font-semibold">{formatPrice(p.price)}</span>
-                          {p.stockQuantity > 0 && p.stockQuantity <= 5 && p.stockStatus === 'instock' && (
-                            <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0 rounded-full">{p.stockQuantity} left</span>
-                          )}
-                        </div>
+                        {isExpanded && group.variants.map((p) => (
+                          <div key={p.id} onClick={() => handleSelectProduct(p.id)} className={`group flex items-center gap-3 px-4 py-2.5 border-b border-[#e8e4df]/30 cursor-pointer transition-all duration-150 pl-10 ${selectedProductId === p.id ? 'bg-white shadow-sm ring-1 ring-[#d4a574]/20' : 'hover:bg-white/60'}`}>
+                            <input type="checkbox" checked={selectedIds.has(p.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(p.id); }} className="w-4 h-4 accent-[#d4a574] rounded shrink-0 cursor-pointer" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-sm font-semibold text-[#2d2d2d] truncate">{p.name}</p>
+                                {p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}
+                              </div>
+                              <div className="flex items-center gap-2 mt-0">
+                                <span className="text-[10px] text-[#d4a574] font-semibold">{formatPrice(p.price)}</span>
+                                {p.stockQuantity > 0 && p.stockQuantity <= 5 && p.stockStatus === 'instock' && (
+                                  <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0 rounded-full">{p.stockQuantity} left</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <button onClick={() => handleQuickStockChange(p.id, -1)} className="w-5 h-5 flex items-center justify-center rounded-full bg-[#f5f1ec] hover:bg-[#e8e4df] text-[#7a7a7a] text-[10px] font-bold transition-colors">-</button>
+                                <span className={`w-5 text-center text-[10px] font-bold ${p.stockQuantity <= 5 && p.stockQuantity > 0 ? 'text-orange-500' : 'text-[#2d2d2d]'}`}>{p.stockQuantity}</span>
+                                <button onClick={() => handleQuickStockChange(p.id, 1)} className="w-5 h-5 flex items-center justify-center rounded-full bg-[#f5f1ec] hover:bg-[#e8e4df] text-[#7a7a7a] text-[10px] font-bold transition-colors">+</button>
+                              </div>
+                              <ChevronRight className={`w-3.5 h-3.5 text-[#7a7a7a] shrink-0 transition-all duration-150 ${selectedProductId === p.id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-1 group-hover:opacity-40 group-hover:translate-x-0'}`} />
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                          <button onClick={() => handleQuickStockChange(p.id, -1)} className="w-5 h-5 flex items-center justify-center rounded-full bg-[#f5f1ec] hover:bg-[#e8e4df] text-[#7a7a7a] text-[10px] font-bold transition-colors">-</button>
-                          <span className={`w-5 text-center text-[10px] font-bold ${p.stockQuantity <= 5 && p.stockQuantity > 0 ? 'text-orange-500' : 'text-[#2d2d2d]'}`}>{p.stockQuantity}</span>
-                          <button onClick={() => handleQuickStockChange(p.id, 1)} className="w-5 h-5 flex items-center justify-center rounded-full bg-[#f5f1ec] hover:bg-[#e8e4df] text-[#7a7a7a] text-[10px] font-bold transition-colors">+</button>
-                        </div>
-                        <ChevronRight className={`w-3.5 h-3.5 text-[#7a7a7a] shrink-0 transition-all duration-150 ${selectedProductId === p.id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-1 group-hover:opacity-40 group-hover:translate-x-0'}`} />
-                      </div>
-                    </div>
-                  ))}
-                  {filteredProducts.length === 0 && (
+                    );
+                  })}
+                  {productGroups.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                       {searchQuery || categoryFilter !== 'All' || stockFilter !== 'all' ? (
                         <>
@@ -793,32 +840,48 @@ export default function AdminCommandCenter({
 
               {/* Mobile product list */}
               <div className="flex-1 overflow-y-auto">
-                <p className="px-4 py-2 text-xs font-semibold text-[#7a7a7a]">{filteredProducts.length} products</p>
-                {filteredProducts.map((p) => (
-                  <div key={p.id} onClick={() => handleSelectProduct(p.id)} className={`group flex items-center gap-3 px-4 py-2.5 border-b border-[#e8e4df]/50 cursor-pointer transition-all duration-150 ${selectedProductId === p.id ? 'bg-white shadow-sm ring-1 ring-[#d4a574]/20' : 'hover:bg-white/60'}`}>
-                    <input type="checkbox" checked={selectedIds.has(p.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(p.id); }} className="w-4 h-4 accent-[#d4a574] rounded shrink-0 cursor-pointer" />
-                    <div className="w-9 h-9 relative bg-[#f5f1ec] rounded-lg overflow-hidden shrink-0 border border-[#e8e4df]/60">{p.imageUrl ? <Image src={p.imageUrl} alt={p.name} fill className="object-cover" /> : <span className="text-xs flex items-center justify-center h-full text-[#7a7a7a]">👶</span>}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-semibold text-[#2d2d2d] truncate">{p.name}</p>
-                        {p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}
+                <p className="px-4 py-2 text-xs font-semibold text-[#7a7a7a]">{productGroups.length} groups ({filteredProducts.length} products)</p>
+                {productGroups.map((group) => {
+                  const isExpanded = expandedGroups.has(group.slug) || group.variants.some((v) => v.id === selectedProductId);
+                  return (
+                    <div key={group.slug} className="border-b border-[#e8e4df]/50">
+                      <div onClick={() => toggleGroupExpansion(group.slug)} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all duration-150 ${group.allOutOfStock ? 'bg-red-50/40' : 'bg-[#faf8f5] hover:bg-white/60'}`}>
+                        <ChevronRight className={`w-3.5 h-3.5 text-[#7a7a7a] shrink-0 transition-transform duration-150 ${isExpanded ? 'rotate-90' : ''}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-[#2d2d2d] truncate">{group.name}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-[#7a7a7a]">{group.variants.length} variant{group.variants.length !== 1 ? 's' : ''}</span>
+                            <span className="text-[10px] text-[#d4a574] font-semibold">Stock: {group.totalStock}</span>
+                          </div>
+                        </div>
+                        {group.allOutOfStock && <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full shrink-0">Out</span>}
                       </div>
-                      <div className="flex items-center gap-2 mt-0">
-                        <span className="text-[10px] text-[#7a7a7a]">{p.category}</span>
-                        <span className="text-[10px] text-[#d4a574] font-semibold">{formatPrice(p.price)}</span>
-                      </div>
+                      {isExpanded && group.variants.map((p) => (
+                        <div key={p.id} onClick={() => handleSelectProduct(p.id)} className={`group flex items-center gap-3 px-4 py-2.5 border-b border-[#e8e4df]/30 cursor-pointer transition-all duration-150 pl-10 ${selectedProductId === p.id ? 'bg-white shadow-sm ring-1 ring-[#d4a574]/20' : 'hover:bg-white/60'}`}>
+                          <input type="checkbox" checked={selectedIds.has(p.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(p.id); }} className="w-4 h-4 accent-[#d4a574] rounded shrink-0 cursor-pointer" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-sm font-semibold text-[#2d2d2d] truncate">{p.name}</p>
+                              {p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-[#d4a574] font-semibold">{formatPrice(p.price)}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <button onClick={() => handleQuickStockChange(p.id, -1)} className="w-4 h-4 flex items-center justify-center rounded-full bg-[#f5f1ec] hover:bg-[#e8e4df] text-[#7a7a7a] text-[9px] font-bold transition-colors">-</button>
+                              <span className={`w-4 text-center text-[9px] font-bold ${p.stockQuantity <= 5 && p.stockQuantity > 0 ? 'text-orange-500' : 'text-[#2d2d2d]'}`}>{p.stockQuantity}</span>
+                              <button onClick={() => handleQuickStockChange(p.id, 1)} className="w-4 h-4 flex items-center justify-center rounded-full bg-[#f5f1ec] hover:bg-[#e8e4df] text-[#7a7a7a] text-[9px] font-bold transition-colors">+</button>
+                            </div>
+                            <ChevronRight className="w-3.5 h-3.5 text-[#7a7a7a] shrink-0" />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => handleQuickStockChange(p.id, -1)} className="w-4 h-4 flex items-center justify-center rounded-full bg-[#f5f1ec] hover:bg-[#e8e4df] text-[#7a7a7a] text-[9px] font-bold transition-colors">-</button>
-                        <span className={`w-4 text-center text-[9px] font-bold ${p.stockQuantity <= 5 && p.stockQuantity > 0 ? 'text-orange-500' : 'text-[#2d2d2d]'}`}>{p.stockQuantity}</span>
-                        <button onClick={() => handleQuickStockChange(p.id, 1)} className="w-4 h-4 flex items-center justify-center rounded-full bg-[#f5f1ec] hover:bg-[#e8e4df] text-[#7a7a7a] text-[9px] font-bold transition-colors">+</button>
-                      </div>
-                      <ChevronRight className="w-3.5 h-3.5 text-[#7a7a7a] shrink-0" />
-                    </div>
-                  </div>
-                ))}
-                {filteredProducts.length === 0 && (
+                  );
+                })}
+                {productGroups.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                     {searchQuery || categoryFilter !== 'All' || stockFilter !== 'all' ? (
                       <>

@@ -26,6 +26,7 @@ interface Product {
   sku: string | null;
   stockStatus: string;
   featured: boolean;
+  variantGroup?: string | null;
   createdAt: Date;
   images?: ProductImageData[];
 }
