@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { ProductImage } from './ProductImage';
 import { AddToCartButton } from './AddToCartButton';
-import { WishlistButton } from './WishlistButton';
 import { ShareButton } from './ShareButton';
 
 interface ProductImageData {
@@ -82,25 +81,21 @@ export function CompactProductCard({ product, onQuickView }: CompactProductCardP
           <h3 className="text-sm font-bold text-[#2D2D2D] group-hover:text-[#FF6B9D] transition-colors line-clamp-2 leading-snug mb-2 min-h-[2.5rem]">
             {product.name}
           </h3>
-          <div className="flex items-center justify-between gap-1 mb-1">
+          <div className="flex items-center justify-between gap-1 mb-2">
             <span className="text-[#FF6B9D] font-bold text-sm">
               {product.price ? `$${product.price.toFixed(2)}` : 'Ask'}
             </span>
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${stockClass}`}>
-              {stockLabel}
-            </span>
-          </div>
-          <div
-            className="flex items-center justify-end"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-          >
-            <ShareButton productId={product.id} productName={product.name} />
+            <div className="flex items-center gap-1">
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${stockClass}`}>
+                {stockLabel}
+              </span>
+              <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                <ShareButton productId={product.id} productName={product.name} />
+              </div>
+            </div>
           </div>
         </div>
       </Link>
-      <div className="absolute top-2 right-2 z-10">
-        <WishlistButton product={product} />
-      </div>
       <div className="px-3 pb-3">
         <AddToCartButton product={product} variant="card" />
       </div>
