@@ -6,7 +6,7 @@ import Image from 'next/image';
 import {
   Package, ShoppingBag, ImageIcon, FileSpreadsheet,
   Search, ChevronRight, Edit3, Trash2, Plus,
-  Check, X, AlertTriangle, Star, Filter
+  Check, X, AlertTriangle, Star, Filter, XCircle
 } from 'lucide-react';
 import AdminBannerSection from '@/components/AdminBannerSection';
 import ImportModal from '@/app/admin/products/ImportModal';
@@ -131,6 +131,12 @@ export default function AdminCommandCenter({
   // ─ Desktop inline editing
   const [isEditing, setIsEditing] = useState(false);
 
+  // ─ Lightbox
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
+  // ─ Sort
+  const [sortBy, setSortBy] = useState<'name' | 'price_asc' | 'price_desc' | 'stock_asc' | 'stock_desc'>('name');
+
   // ─ Derived
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === selectedProductId) || null,
@@ -165,8 +171,14 @@ export default function AdminCommandCenter({
       );
     }
 
+    if (sortBy === 'name') result.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortBy === 'price_asc') result.sort((a, b) => (a.price || 0) - (b.price || 0));
+    else if (sortBy === 'price_desc') result.sort((a, b) => (b.price || 0) - (a.price || 0));
+    else if (sortBy === 'stock_asc') result.sort((a, b) => a.stockQuantity - b.stockQuantity);
+    else if (sortBy === 'stock_desc') result.sort((a, b) => b.stockQuantity - a.stockQuantity);
+
     return result;
-  }, [products, categoryFilter, stockFilter, searchQuery]);
+  }, [products, categoryFilter, stockFilter, searchQuery, sortBy]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -387,12 +399,25 @@ export default function AdminCommandCenter({
 
               {/* ── Column 2: Product Stream ── */}
               <div className="w-[380px] min-w-[320px] bg-[#faf8f5] border-r border-[#e8e4df] flex flex-col">
-                <div className="px-4 py-3 border-b border-[#e8e4df] bg-white flex items-center justify-between">
-                  <div>
+                <div className="px-4 py-3 border-b border-[#e8e4df] bg-white flex items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="text-sm font-bold">{filteredProducts.length} products</p>
                     {selectedIds.size > 0 && <p className="text-xs text-[#d4a574] font-medium">{selectedIds.size} selected</p>}
                   </div>
-                  <button onClick={() => openEdit(null)} className="flex items-center gap-1 px-3 py-1.5 bg-[#d4a574] text-white text-xs font-semibold rounded-full hover:bg-[#c49464] transition-colors"><Plus className="w-3.5 h-3.5" />Add</button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <select
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as any)}
+                      className="text-xs bg-white border border-[#e8e4df] rounded-lg px-2 py-1.5 focus:border-[#d4a574] focus:outline-none"
+                    >
+                      <option value="name">Name A–Z</option>
+                      <option value="price_asc">Price: Low to High</option>
+                      <option value="price_desc">Price: High to Low</option>
+                      <option value="stock_asc">Stock: Low to High</option>
+                      <option value="stock_desc">Stock: High to Low</option>
+                    </select>
+                    <button onClick={() => openEdit(null)} className="flex items-center gap-1 px-3 py-1.5 bg-[#d4a574] text-white text-xs font-semibold rounded-full hover:bg-[#c49464] transition-colors"><Plus className="w-3.5 h-3.5" />Add</button>
+                  </div>
                 </div>
                 {selectedIds.size > 0 && (
                   <div className="px-4 py-2 bg-[#f5f1ec] border-b border-[#e8e4df] flex items-center gap-2">
@@ -401,6 +426,27 @@ export default function AdminCommandCenter({
                     <button onClick={handleBulkDelete} disabled={bulkLoading} className="px-2.5 py-1 text-[10px] font-semibold bg-red-50 text-red-500 border border-red-100 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50">Delete</button>
                     <div className="flex-1" />
                     <button onClick={() => setSelectedIds(new Set())} className="p-1 hover:bg-[#e8e4df] rounded transition-colors"><X className="w-3.5 h-3.5 text-[#7a7a7a]" /></button>
+                  </div>
+                )}
+                {(searchQuery || categoryFilter !== 'All' || stockFilter !== 'all') && (
+                  <div className="px-4 py-2 bg-white border-b border-[#e8e4df] flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] text-[#7a7a7a] font-semibold uppercase">Filters:</span>
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery('')} className="inline-flex items-center gap-1 px-2 py-1 bg-[#f5f1ec] text-[#2d2d2d] text-[10px] font-medium rounded-full hover:bg-[#e8e4df] transition-colors">
+                        <X className="w-3 h-3" /> Search: &quot;{searchQuery}&quot;
+                      </button>
+                    )}
+                    {categoryFilter !== 'All' && (
+                      <button onClick={() => setCategoryFilter('All')} className="inline-flex items-center gap-1 px-2 py-1 bg-[#f5f1ec] text-[#2d2d2d] text-[10px] font-medium rounded-full hover:bg-[#e8e4df] transition-colors">
+                        <X className="w-3 h-3" /> Category: {categoryFilter}
+                      </button>
+                    )}
+                    {stockFilter !== 'all' && (
+                      <button onClick={() => setStockFilter('all')} className="inline-flex items-center gap-1 px-2 py-1 bg-[#f5f1ec] text-[#2d2d2d] text-[10px] font-medium rounded-full hover:bg-[#e8e4df] transition-colors">
+                        <X className="w-3 h-3" /> Stock: {stockLabel(stockFilter)}
+                      </button>
+                    )}
+                    <button onClick={() => { setSearchQuery(''); setCategoryFilter('All'); setStockFilter('all'); }} className="text-[10px] text-[#d4a574] font-semibold hover:underline ml-auto">Clear all</button>
                   </div>
                 )}
                 <div className="flex-1 overflow-y-auto">
@@ -549,7 +595,46 @@ export default function AdminCommandCenter({
                     </div>
                   </>
                 ) : (
-                  <div className="flex-1 flex flex-col items-center justify-center text-[#7a7a7a]"><Package className="w-16 h-16 mb-4 opacity-20" /><p className="text-lg font-semibold">Select a product</p><p className="text-sm mt-1">Choose a product from the list to view details</p></div>
+                  <div className="flex-1 overflow-y-auto p-6">
+                    <div className="mb-6">
+                      <h2 className="text-lg font-bold">Overview</h2>
+                      <p className="text-xs text-[#7a7a7a] mt-1">Inventory at a glance</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-[#faf8f5] rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a]">Total Products</span>
+                          <Package className="w-4 h-4 text-[#d4a574]" />
+                        </div>
+                        <p className="text-3xl font-bold text-[#2d2d2d]">{products.length}</p>
+                      </div>
+                      <div className="bg-[#faf8f5] rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a]">Featured</span>
+                          <Star className="w-4 h-4 text-[#d4a574]" />
+                        </div>
+                        <p className="text-3xl font-bold text-[#2d2d2d]">{products.filter((p) => p.featured).length}</p>
+                      </div>
+                      <div className="bg-[#faf8f5] rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a]">Low Stock</span>
+                          <AlertTriangle className="w-4 h-4 text-orange-500" />
+                        </div>
+                        <p className="text-3xl font-bold text-orange-500">
+                          {products.filter((p) => p.stockStatus === 'instock' && p.stockQuantity > 0 && p.stockQuantity <= 5).length}
+                        </p>
+                      </div>
+                      <div className="bg-[#faf8f5] rounded-xl p-5">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a]">Out of Stock</span>
+                          <XCircle className="w-4 h-4 text-red-500" />
+                        </div>
+                        <p className="text-3xl font-bold text-red-500">
+                          {products.filter((p) => p.stockStatus === 'outofstock').length}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -567,8 +652,42 @@ export default function AdminCommandCenter({
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7a7a7a]" />
                   <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-8 pr-3 py-2 bg-[#faf8f5] border border-[#e8e4df] rounded-lg text-sm text-[#2d2d2d] focus:border-[#d4a574] focus:outline-none transition-all" />
                 </div>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="text-[11px] bg-white border border-[#e8e4df] rounded-lg px-2 py-2 focus:border-[#d4a574] focus:outline-none shrink-0"
+                >
+                  <option value="name">A–Z</option>
+                  <option value="price_asc">$ ↑</option>
+                  <option value="price_desc">$ ↓</option>
+                  <option value="stock_asc">Qty ↑</option>
+                  <option value="stock_desc">Qty ↓</option>
+                </select>
                 <button onClick={() => openEdit(null)} className="flex items-center gap-1 px-3 py-2 bg-[#d4a574] text-white text-xs font-semibold rounded-full hover:bg-[#c49464] transition-colors"><Plus className="w-3.5 h-3.5" /></button>
               </div>
+
+              {/* Active filter chips */}
+              {(searchQuery || categoryFilter !== 'All' || stockFilter !== 'all') && (
+                <div className="px-4 py-2 bg-white border-b border-[#e8e4df] flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] text-[#7a7a7a] font-semibold uppercase">Filters:</span>
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery('')} className="inline-flex items-center gap-1 px-2 py-1 bg-[#f5f1ec] text-[#2d2d2d] text-[10px] font-medium rounded-full hover:bg-[#e8e4df] transition-colors">
+                      <X className="w-3 h-3" /> Search: &quot;{searchQuery}&quot;
+                    </button>
+                  )}
+                  {categoryFilter !== 'All' && (
+                    <button onClick={() => setCategoryFilter('All')} className="inline-flex items-center gap-1 px-2 py-1 bg-[#f5f1ec] text-[#2d2d2d] text-[10px] font-medium rounded-full hover:bg-[#e8e4df] transition-colors">
+                      <X className="w-3 h-3" /> {categoryFilter}
+                    </button>
+                  )}
+                  {stockFilter !== 'all' && (
+                    <button onClick={() => setStockFilter('all')} className="inline-flex items-center gap-1 px-2 py-1 bg-[#f5f1ec] text-[#2d2d2d] text-[10px] font-medium rounded-full hover:bg-[#e8e4df] transition-colors">
+                      <X className="w-3 h-3" /> {stockLabel(stockFilter)}
+                    </button>
+                  )}
+                  <button onClick={() => { setSearchQuery(''); setCategoryFilter('All'); setStockFilter('all'); }} className="text-[10px] text-[#d4a574] font-semibold hover:underline ml-auto">Clear all</button>
+                </div>
+              )}
 
               {/* Bulk actions */}
               {selectedIds.size > 0 && (
@@ -649,8 +768,8 @@ export default function AdminCommandCenter({
                       <div>
                         {(() => { const imgs = allProductImages(selectedProduct); return imgs.length > 0 ? (
                           <div className="space-y-2">
-                            <div className="relative aspect-[16/9] max-h-[160px] bg-[#f5f1ec] rounded-xl overflow-hidden"><Image src={imgs[0]} alt={selectedProduct.name} fill className="object-cover" /></div>
-                            {imgs.length > 1 && <div className="flex gap-2">{imgs.map((url, i) => (<div key={i} className={`relative w-10 h-10 rounded-lg overflow-hidden border-2 transition-colors ${i === 0 ? 'border-[#d4a574]' : 'border-transparent'}`}><Image src={url} alt="" fill className="object-cover" /></div>))}</div>}
+                            <div className="relative aspect-[16/9] max-h-[160px] bg-[#f5f1ec] rounded-xl overflow-hidden cursor-pointer" onClick={() => setLightboxImage(imgs[0])}><Image src={imgs[0]} alt={selectedProduct.name} fill className="object-cover" /></div>
+                            {imgs.length > 1 && <div className="flex gap-2">{imgs.map((url, i) => (<div key={i} className={`relative w-10 h-10 rounded-lg overflow-hidden border-2 transition-colors cursor-pointer ${i === 0 ? 'border-[#d4a574]' : 'border-transparent'}`} onClick={() => setLightboxImage(url)}><Image src={url} alt="" fill className="object-cover" /></div>))}</div>}
                           </div>
                         ) : (<div className="flex flex-col items-center justify-center py-6 text-[#7a7a7a] bg-[#faf8f5] rounded-xl"><p className="text-2xl mb-1">👶</p><p className="text-xs font-medium">No images</p></div>); })()}
                       </div>
@@ -781,6 +900,16 @@ export default function AdminCommandCenter({
           </div>
         )}
       </main>
+
+      {/* ── Lightbox ── */}
+      {lightboxImage && (
+        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4" onClick={() => setLightboxImage(null)}>
+          <button className="absolute top-4 right-4 p-2 text-white/70 hover:text-white transition-colors" onClick={() => setLightboxImage(null)}>
+            <X className="w-6 h-6" />
+          </button>
+          <img src={lightboxImage} alt="Full size" className="max-w-full max-h-full object-contain rounded-lg" />
+        </div>
+      )}
 
       {/* ── Edit Modal ── */}
       <EditModal
