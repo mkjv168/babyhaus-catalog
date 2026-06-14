@@ -2,44 +2,69 @@
 
 import { useCart } from '@/context/CartContext';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+
+interface VariantInfo {
+  id: string;
+  name: string;
+  price: number | null;
+  stockStatus: string;
+  stockQuantity: number;
+}
 
 interface AddToCartButtonProps {
   product: {
     id: string;
     name: string;
-    price: number | null;
     imageUrl: string | null;
     brand: string | null;
     category: string;
-    stockStatus: string;
+    variants?: VariantInfo[];
   };
+  selectedVariantId?: string;
   variant?: 'card' | 'detail';
 }
 
-export function AddToCartButton({ product, variant = 'card' }: AddToCartButtonProps) {
+export function AddToCartButton({ product, selectedVariantId, variant = 'card' }: AddToCartButtonProps) {
   const { addItem, items } = useCart();
   const [added, setAdded] = useState(false);
 
-  const inCart = items.find((i) => i.id === product.id);
-  const cartQty = inCart?.quantity ?? 0;
+  const targetVariant = useMemo(() => {
+    if (selectedVariantId && product.variants && product.variants.length > 0) {
+      return product.variants.find((v) => v.id === selectedVariantId) || null;
+    }
+    if (product.variants && product.variants.length > 0) {
+      return product.variants.find((v) => v.stockStatus !== 'outofstock') || product.variants[0] || null;
+    }
+    return null;
+  }, [product.variants, selectedVariantId]);
+
+  const cartItem = items.find((i) => i.id === (targetVariant?.id ?? product.id));
+  const cartQty = cartItem?.quantity ?? 0;
+
+  const isOutOfStock = targetVariant ? targetVariant.stockStatus === 'outofstock' : true;
+  const displayName = targetVariant && targetVariant.name !== product.name
+    ? `${product.name} - ${targetVariant.name}`
+    : product.name;
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (product.stockStatus === 'outofstock') return;
+    if (isOutOfStock || !targetVariant) return;
 
     addItem({
-      id: product.id,
+      id: targetVariant.id,
+      productId: product.id,
       name: product.name,
-      price: product.price,
+      variantName: targetVariant.name,
+      price: targetVariant.price,
       imageUrl: product.imageUrl,
       brand: product.brand,
       category: product.category,
-      stockStatus: product.stockStatus,
+      stockStatus: targetVariant.stockStatus,
     });
 
-    toast.success(`${product.name} added to cart`);
+    toast.success(`${displayName} added to cart`);
     setAdded(true);
     setTimeout(() => setAdded(false), 1200);
   };
@@ -48,16 +73,16 @@ export function AddToCartButton({ product, variant = 'card' }: AddToCartButtonPr
     return (
       <button
         onClick={handleAdd}
-        disabled={product.stockStatus === 'outofstock'}
+        disabled={isOutOfStock}
         className={`inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-center shadow-sm transition-all active:scale-[0.98] w-full ${
-          product.stockStatus === 'outofstock'
+          isOutOfStock
             ? 'bg-[#F0E6DD] text-[#A0A0A0] cursor-not-allowed'
             : added
             ? 'bg-green-500 text-white'
             : 'bg-[#2d2d2d] text-white hover:bg-[#1a1a1a]'
         }`}
       >
-        {product.stockStatus === 'outofstock' ? (
+        {isOutOfStock ? (
           <>
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             Out of Stock
@@ -77,20 +102,19 @@ export function AddToCartButton({ product, variant = 'card' }: AddToCartButtonPr
     );
   }
 
-  // Card variant - compact icon button
   return (
     <button
       onClick={handleAdd}
-      disabled={product.stockStatus === 'outofstock'}
+      disabled={isOutOfStock}
       className={`flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl text-xs font-bold transition-all active:scale-[0.98] ${
-        product.stockStatus === 'outofstock'
+        isOutOfStock
           ? 'bg-[#FFF9F5] text-[#A0A0A0] cursor-not-allowed'
           : added
           ? 'bg-green-50 text-green-600'
           : 'bg-[#2d2d2d] text-white hover:bg-[#1a1a1a]'
       }`}
     >
-      {product.stockStatus === 'outofstock' ? (
+      {isOutOfStock ? (
         <span>Out of Stock</span>
       ) : added ? (
         <>

@@ -68,13 +68,13 @@ export function CartDrawer() {
           ) : (
             items.map((item) => (
               <div key={item.id} className="flex gap-3 bg-white rounded-xl border border-[#F0E6DD] p-3">
-                <Link href={`/product/${item.id}`} onClick={() => setIsOpen(false)} className="flex-shrink-0">
+                <Link href={`/product/${item.productId}`} onClick={() => setIsOpen(false)} className="flex-shrink-0">
                   <div className="w-16 h-16 rounded-lg bg-[#FFF9F5] overflow-hidden">
                     <ProductImage src={item.imageUrl} alt={item.name} className="w-full h-full" />
                   </div>
                 </Link>
                 <div className="flex-1 min-w-0">
-                  <Link href={`/product/${item.id}`} onClick={() => setIsOpen(false)}>
+                  <Link href={`/product/${item.productId}`} onClick={() => setIsOpen(false)}>
                     <h3 className="text-sm font-semibold text-[#2D2D2D] line-clamp-2 leading-snug hover:text-[#FF6B9D] transition-colors">
                       {item.name}
                     </h3>

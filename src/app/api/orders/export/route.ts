@@ -8,17 +8,18 @@ export async function GET() {
 
   try {
     const orders = await prisma.order.findMany({
-      include: { product: { select: { name: true } } },
+      include: { variant: { include: { product: true } } },
       orderBy: { createdAt: 'desc' },
     });
 
     // CSV headers
-    const headers = ['Date', 'Product', 'Customer', 'Telegram', 'Quantity', 'Payment', 'Address', 'Notes', 'Status'];
+    const headers = ['Date', 'Product', 'Variant', 'Customer', 'Telegram', 'Quantity', 'Payment', 'Address', 'Notes', 'Status'];
 
     // CSV rows
     const rows = orders.map((o) => [
       new Date(o.createdAt).toLocaleDateString(),
-      o.product?.name || 'Unknown',
+      o.variant?.product?.name || 'Unknown',
+      o.variant?.name || '-',
       o.customerName,
       o.telegramPhone,
       String(o.quantity),

@@ -3,8 +3,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 
 export interface CartItem {
-  id: string;
+  id: string;          // variantId
+  productId: string;
   name: string;
+  variantName: string;
   price: number | null;
   imageUrl: string | null;
   brand: string | null;
@@ -15,9 +17,9 @@ export interface CartItem {
 
 interface CartContextValue {
   items: CartItem[];
-  addItem: (product: Omit<CartItem, 'quantity'>) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  removeItem: (variantId: string) => void;
+  updateQuantity: (variantId: string, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -27,7 +29,7 @@ interface CartContextValue {
 
 const CartContext = createContext<CartContextValue | null>(null);
 
-const CART_KEY = 'babyhaus-cart';
+const CART_KEY = 'babyhaus-cart-v2';
 
 function loadCart(): CartItem[] {
   if (typeof window === 'undefined') return [];
@@ -49,41 +51,39 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate from localStorage on mount
   useEffect(() => {
     setItems(loadCart());
     setHydrated(true);
   }, []);
 
-  // Persist on change
   useEffect(() => {
     if (hydrated) saveCart(items);
   }, [items, hydrated]);
 
-  const addItem = useCallback((product: Omit<CartItem, 'quantity'>) => {
+  const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
+      const existing = prev.find((i) => i.id === item.id);
       if (existing) {
         return prev.map((i) =>
-          i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...item, quantity: 1 }];
     });
     setIsOpen(true);
   }, []);
 
-  const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  const removeItem = useCallback((variantId: string) => {
+    setItems((prev) => prev.filter((i) => i.id !== variantId));
   }, []);
 
-  const updateQuantity = useCallback((id: string, quantity: number) => {
+  const updateQuantity = useCallback((variantId: string, quantity: number) => {
     if (quantity <= 0) {
-      setItems((prev) => prev.filter((i) => i.id !== id));
+      setItems((prev) => prev.filter((i) => i.id !== variantId));
       return;
     }
     setItems((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, quantity } : i))
+      prev.map((i) => (i.id === variantId ? { ...i, quantity } : i))
     );
   }, []);
 

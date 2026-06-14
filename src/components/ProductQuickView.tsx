@@ -12,17 +12,24 @@ interface ProductImageData {
   order: number;
 }
 
+interface ProductVariant {
+  id: string;
+  name: string;
+  sku: string | null;
+  price: number | null;
+  stockStatus: string;
+  stockQuantity: number;
+}
+
 interface QuickViewProduct {
   id: string;
   name: string;
   brand: string | null;
   category: string;
   description: string | null;
-  price: number | null;
   imageUrl: string | null;
-  sku: string | null;
-  stockStatus: string;
   images?: ProductImageData[];
+  variants: ProductVariant[];
 }
 
 interface ProductQuickViewProps {
@@ -31,17 +38,26 @@ interface ProductQuickViewProps {
   onClose: () => void;
 }
 
+function minPrice(variants: ProductVariant[]): number | null {
+  const prices = variants.map(v => v.price).filter((p): p is number => p !== null);
+  return prices.length > 0 ? Math.min(...prices) : null;
+}
+
+function aggregateStock(variants: ProductVariant[]): string {
+  if (variants.some(v => v.stockStatus === 'instock')) return 'instock';
+  if (variants.some(v => v.stockStatus === 'preorder')) return 'preorder';
+  return 'outofstock';
+}
+
 export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
 
-  // Reset image index when product changes
   useEffect(() => {
     setCurrentImageIndex(0);
   }, [product?.id]);
 
-  // Lock body scroll when open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -53,7 +69,6 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
 
   if (!isOpen || !product) return null;
 
-  // Get all images - combine legacy imageUrl with images array
   const allImages: string[] = [];
   if (product.imageUrl) allImages.push(product.imageUrl);
   if (product.images && product.images.length > 0) {
@@ -64,7 +79,6 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
     });
   }
 
-  // Handle touch events for swipe
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStart(e.targetTouches[0].clientX);
   };
@@ -75,11 +89,9 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
-
     if (isLeftSwipe && currentImageIndex < allImages.length - 1) {
       setCurrentImageIndex(currentImageIndex + 1);
     }
@@ -88,40 +100,40 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
     }
   };
 
+  const stockStatus = aggregateStock(product.variants);
   const stockLabel =
-    product.stockStatus === 'instock'
+    stockStatus === 'instock'
       ? 'In Stock'
-      : product.stockStatus === 'preorder'
+      : stockStatus === 'preorder'
       ? 'Pre-Order'
       : 'Out of Stock';
 
   const stockClass =
-    product.stockStatus === 'instock'
+    stockStatus === 'instock'
       ? 'bg-green-50 text-green-600'
-      : product.stockStatus === 'preorder'
+      : stockStatus === 'preorder'
       ? 'bg-amber-50 text-amber-600'
       : 'bg-red-50 text-red-600';
 
+  const lowPrice = minPrice(product.variants);
+  const firstInStock = product.variants.find(v => v.stockStatus !== 'outofstock') ?? product.variants[0];
+
   const telegramMessage = encodeURIComponent(
-    `Hi Baby Haus, I am interested in ordering: ${product.name}${product.price ? ` ($${product.price.toFixed(2)})` : ''}. Please confirm availability.`
+    `Hi Baby Haus, I am interested in ordering: ${product.name}${lowPrice ? ` (from $${lowPrice.toFixed(2)})` : ''}. Please confirm availability.`
   );
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center md:hidden">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Sheet */}
       <div className="relative w-full max-w-lg bg-white rounded-t-3xl shadow-2xl animate-in slide-in-from-bottom duration-200 max-h-[85vh] flex flex-col">
-        {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 cursor-pointer" onClick={onClose}>
           <div className="w-10 h-1 rounded-full bg-[#F0E6DD]" />
         </div>
 
-        {/* Header with close */}
         <div className="flex items-center justify-between px-5 pb-2">
           <h2 className="text-sm font-bold text-[#6B6B6B] uppercase tracking-wide">Quick View</h2>
           <button
@@ -133,13 +145,10 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
           </button>
         </div>
 
-        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-5 pb-6">
-          {/* Image Gallery */}
           <div className="aspect-square relative bg-[#FFF9F5] rounded-2xl overflow-hidden border border-[#F0E6DD] mb-4">
             {allImages.length > 1 ? (
               <>
-                {/* Scrollable images */}
                 <div 
                   className="relative w-full h-full flex transition-transform duration-300 ease-out"
                   style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
@@ -157,13 +166,9 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
                     </div>
                   ))}
                 </div>
-
-                {/* Image counter */}
                 <div className="absolute top-4 right-4 bg-black/50 text-white px-2 py-1 rounded-full text-xs font-medium">
                   {currentImageIndex + 1} / {allImages.length}
                 </div>
-
-                {/* Dot indicators */}
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
                   {allImages.map((_, index) => (
                     <button
@@ -180,7 +185,6 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
                 </div>
               </>
             ) : (
-              // Single image
               <ProductImage
                 src={allImages[0] || null}
                 alt={product.name}
@@ -189,7 +193,6 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
             )}
           </div>
 
-          {/* Info */}
           <p className="text-[#FF6B9D] text-xs font-bold tracking-wide uppercase mb-1">
             {product.brand || product.category}
           </p>
@@ -197,37 +200,36 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
 
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xl font-bold text-[#FF6B9D]">
-              {product.price ? `$${product.price.toFixed(2)}` : 'Ask for Price'}
+              {lowPrice !== null ? `$${lowPrice.toFixed(2)}${product.variants.length > 1 ? '+' : ''}` : 'Ask for Price'}
             </span>
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${stockClass}`}>
               {stockLabel}
             </span>
           </div>
 
-          {/* Description */}
           {product.description && (
             <p className="text-sm text-[#6B6B6B] leading-relaxed mb-4 line-clamp-4">
               {product.description}
             </p>
           )}
 
-          {/* SKU */}
-          {product.sku && (
-            <p className="text-xs text-[#A0A0A0] mb-4">SKU: {product.sku}</p>
-          )}
-
-          {/* Actions */}
           <div className="flex flex-col gap-2 mb-3">
             <AddToCartButton
               product={{
                 id: product.id,
                 name: product.name,
-                price: product.price,
                 imageUrl: product.imageUrl,
                 brand: product.brand,
                 category: product.category,
-                stockStatus: product.stockStatus,
+                variants: product.variants.map(v => ({
+                  id: v.id,
+                  name: v.name,
+                  price: v.price,
+                  stockStatus: v.stockStatus,
+                  stockQuantity: v.stockQuantity,
+                })),
               }}
+              selectedVariantId={firstInStock?.id}
               variant="detail"
             />
             <a

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function OrderForm({ productId, productName, productPrice }: { productId: string; productName: string; productPrice: number | null }) {
+export default function OrderForm({ variantId, productName, variantName, productPrice }: { variantId: string; productName: string; variantName: string; productPrice: number | null }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
@@ -16,7 +16,7 @@ export default function OrderForm({ productId, productName, productPrice }: { pr
       const res = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, customerName: name, telegramPhone: phone, notes }),
+        body: JSON.stringify({ variantId, customerName: name, telegramPhone: phone, notes }),
       });
       if (res.ok) {
         setSubmitted(true);
@@ -30,7 +30,7 @@ export default function OrderForm({ productId, productName, productPrice }: { pr
 
   if (submitted) {
     const telegramMessage = encodeURIComponent(
-      `Hi Baby Haus, I am ${name}. I want to order: ${productName}${productPrice ? ` ($${productPrice.toFixed(2)})` : ''}. My Telegram: ${phone}. Please confirm!`
+      `Hi Baby Haus, I am ${name}. I want to order: ${productName} - ${variantName}${productPrice ? ` ($${productPrice.toFixed(2)})` : ''}. My Telegram: ${phone}. Please confirm!`
     );
     return (
       <div className="text-center py-8">

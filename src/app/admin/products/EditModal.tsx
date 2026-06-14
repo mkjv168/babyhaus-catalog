@@ -10,19 +10,26 @@ interface ProductImage {
   order: number;
 }
 
+interface ProductVariant {
+  id: string;
+  sku: string;
+  name: string;
+  price: number | null;
+  stockQuantity: number;
+  stockStatus: string;
+  imageUrl: string | null;
+}
+
 interface Product {
   id: string;
   name: string;
   brand: string | null;
   category: string;
   description: string | null;
-  price: number | null;
-  imageUrl: string | null;
-  sku: string | null;
-  stockStatus: string;
-  stockQuantity: number;
   featured: boolean;
-  images?: ProductImage[];
+  imageUrl: string | null;
+  images: ProductImage[];
+  variants: ProductVariant[];
 }
 
 interface EditModalProps {
@@ -75,12 +82,17 @@ export default function EditModal({ product, isOpen, onClose, onSuccess }: EditM
     brand: product.brand || '',
     category: product.category,
     description: product.description || '',
-    price: product.price?.toString() || '',
     images: imageUrls,
-    sku: product.sku || '',
-    stockStatus: product.stockStatus,
-    stockQuantity: product.stockQuantity?.toString() || '0',
     featured: product.featured,
+    variants: product.variants.map(v => ({
+      id: v.id,
+      sku: v.sku,
+      name: v.name,
+      price: v.price?.toString() || '',
+      stockQuantity: v.stockQuantity.toString(),
+      stockStatus: v.stockStatus,
+      imageUrl: v.imageUrl,
+    })),
   } : undefined;
 
   return (

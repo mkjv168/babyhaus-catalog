@@ -9,11 +9,20 @@ export default async function AdminDashboard() {
 
   const [products, orders, banners] = await Promise.all([
     prisma.product.findMany({
-      include: { images: { orderBy: { order: 'asc' } } },
+      include: {
+        images: { orderBy: { order: 'asc' } },
+        variants: { orderBy: { name: 'asc' } }
+      },
       orderBy: { createdAt: 'desc' },
     }),
     prisma.order.findMany({
-      include: { product: { select: { name: true } } },
+      include: {
+        variant: {
+          include: {
+            product: { select: { name: true } }
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' },
     }),
     prisma.banner.findMany({

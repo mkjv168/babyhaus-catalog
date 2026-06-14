@@ -9,9 +9,9 @@ export const revalidate = 60;
 
 export default async function Home() {
   const [products, banners] = await Promise.all([
-    prisma.product.findMany({ 
+    prisma.product.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { images: { orderBy: { order: 'asc' } } }
+      include: { images: { orderBy: { order: 'asc' } }, variants: true }
     }),
     prisma.banner.findMany({
       where: { active: true },
@@ -34,7 +34,6 @@ export default async function Home() {
         />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6 md:pt-16 md:pb-10">
           <div className="text-center">
-            {/* Multicolor logo-style title */}
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-3 font-['Fredoka']">
               <span className="text-[#FF6B9D]">B</span>
               <span className="text-[#F5A623]">a</span>

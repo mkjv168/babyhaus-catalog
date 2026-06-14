@@ -7,6 +7,13 @@ import { CompactProductCard } from '@/components/CompactProductCard';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
+function aggregateStock(variants?: { stockStatus: string }[]): string {
+  if (!variants || variants.length === 0) return 'outofstock';
+  if (variants.some((v) => v.stockStatus === 'instock')) return 'instock';
+  if (variants.some((v) => v.stockStatus === 'preorder')) return 'preorder';
+  return 'outofstock';
+}
+
 export default function WishlistPage() {
   const { items, clearWishlist } = useWishlist();
   const { addItem } = useCart();
@@ -17,7 +24,9 @@ export default function WishlistPage() {
       if (product.stockStatus !== 'outofstock') {
         addItem({
           id: product.id,
+          productId: product.id,
           name: product.name,
+          variantName: product.name,
           price: product.price,
           imageUrl: product.imageUrl,
           brand: product.brand,
@@ -27,7 +36,7 @@ export default function WishlistPage() {
         addedCount++;
       }
     });
-    
+
     if (addedCount > 0) {
       toast.success(`${addedCount} item${addedCount > 1 ? 's' : ''} added to cart`);
     } else {
@@ -38,7 +47,7 @@ export default function WishlistPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      
+
       <main className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -47,7 +56,7 @@ export default function WishlistPage() {
               {items.length} item{items.length !== 1 ? 's' : ''} saved
             </p>
           </div>
-          
+
           {items.length > 0 && (
             <button
               onClick={handleAddAllToCart}
@@ -87,7 +96,29 @@ export default function WishlistPage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {items.map((product) => (
-              <CompactProductCard key={product.id} product={product} />
+              <CompactProductCard
+                key={product.id}
+                product={{
+                  ...product,
+                  variants: product.variantCount && product.variantCount > 1
+                    ? Array.from({ length: product.variantCount }).map((_, i) => ({
+                        id: `${product.id}-v${i}`,
+                        name: 'Option',
+                        sku: null,
+                        price: product.price,
+                        stockStatus: product.stockStatus,
+                        stockQuantity: 0,
+                      }))
+                    : [{
+                        id: product.id,
+                        name: product.name,
+                        sku: null,
+                        price: product.price,
+                        stockStatus: product.stockStatus,
+                        stockQuantity: 0,
+                      }],
+                }}
+              />
             ))}
           </div>
         )}

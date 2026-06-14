@@ -1,149 +1,141 @@
-import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
+import { PrismaClient } from '@prisma/client'
 
-const prisma = new PrismaClient({});
+const prisma = new PrismaClient()
 
 async function main() {
-  // Create admin user
-  const hashedPassword = await bcrypt.hash('admin', 10);
-  await prisma.adminUser.upsert({
-    where: { username: 'admin' },
-    update: {},
-    create: {
-      username: 'admin',
-      password: hashedPassword,
-    },
-  });
+  // Clear existing
+  await prisma.order.deleteMany()
+  await prisma.productVariant.deleteMany()
+  await prisma.productImage.deleteMany()
+  await prisma.product.deleteMany()
+  await prisma.banner.deleteMany()
 
-  const products = [
-    {
-      name: 'Aquaphor Lip Repair',
-      brand: 'Aquaphor',
-      category: 'Skincare',
-      description: 'Lip care for dry and cracked lips. Gentle formula safe for babies.',
-      price: 12.5,
-      imageUrl: '/products/aquaphor-lip.svg',
-      sku: 'AQ-LIP-001',
-      stockStatus: 'instock',
+  // Create products with variants
+  const pamperNightTime = await prisma.product.create({
+    data: {
+      name: 'Pamper NightTime Diaper',
+      brand: 'Pamper',
+      category: 'Diapers',
+      description: 'Soft overnight protection for your baby. Imported from USA.',
       featured: true,
-    },
-    {
-      name: 'Aquaphor Healing Paste Baby',
-      brand: 'Aquaphor',
-      category: 'Skincare',
-      description: 'Healing ointment for baby rash and irritated skin. Trusted by pediatricians.',
-      price: 18.0,
-      imageUrl: '/products/aquaphor-paste.svg',
-      sku: 'AQ-PST-002',
-      stockStatus: 'instock',
-      featured: true,
-    },
-    {
-      name: 'Aquaphor Baby Wash & Shampoo',
-      brand: 'Aquaphor',
-      category: 'Bath',
-      description: 'Gentle 2-in-1 wash and shampoo for delicate baby skin and hair.',
-      price: 15.0,
-      imageUrl: '/products/aquaphor-wash.svg',
-      sku: 'AQ-WSH-003',
-      stockStatus: 'instock',
+      imageUrl: 'https://images.unsplash.com/photo-1544367563-12123d8965cd?w=400',
+      variants: {
+        create: [
+          { sku: 'PP-XXL-NT-36', name: 'Size XXL - 36 pcs', price: 22, stockQuantity: 0, stockStatus: 'outofstock' },
+          { sku: 'PP-XL-NT-42', name: 'Size XL - 42 pcs', price: 22, stockQuantity: 0, stockStatus: 'outofstock' },
+          { sku: 'PP-L-NT-48', name: 'Size L - 48 pcs', price: 22, stockQuantity: 3, stockStatus: 'instock' },
+          { sku: 'PP-M-NT-52', name: 'Size M - 52 pcs', price: 22, stockQuantity: 9, stockStatus: 'instock' },
+        ]
+      }
+    }
+  })
+
+  const pamperDaytime = await prisma.product.create({
+    data: {
+      name: 'Pamper Daytime Diaper',
+      brand: 'Pamper',
+      category: 'Diapers',
+      description: 'Breathable daytime diaper for active babies.',
       featured: false,
-    },
-    {
-      name: 'Aquaphor Baby Sensitive Lotion',
-      brand: 'Aquaphor',
-      category: 'Skincare',
-      description: 'Sensitive skin lotion that protects and moisturizes baby skin.',
-      price: 16.5,
-      imageUrl: '/products/aquaphor-lotion.svg',
-      sku: 'AQ-LTN-004',
-      stockStatus: 'instock',
+      imageUrl: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400',
+      variants: {
+        create: [
+          { sku: 'PP-XL-DT-50', name: 'Size XL - 50 pcs', price: 22, stockQuantity: 0, stockStatus: 'outofstock' },
+          { sku: 'PP-L-DT-52', name: 'Size L - 52 pcs', price: 22, stockQuantity: 0, stockStatus: 'outofstock' },
+          { sku: 'PP-M-DT-62', name: 'Size M - 62 pcs', price: 22, stockQuantity: 3, stockStatus: 'instock' },
+          { sku: 'PP-S-DT-70', name: 'Size S - 70 pcs', price: 22, stockQuantity: 1, stockStatus: 'instock' },
+        ]
+      }
+    }
+  })
+
+  const wetWipes = await prisma.product.create({
+    data: {
+      name: 'Pamper Wet Wipes',
+      brand: 'Pamper',
+      category: 'Wet Wipes',
+      description: 'Gentle wet wipes, 56 sheets per pack.',
       featured: false,
-    },
-    {
-      name: 'Toys & Children\'s Books',
-      brand: 'Various',
-      category: 'Toys',
-      description: 'Educational toys and children\'s books to stimulate early development.',
-      price: null,
-      imageUrl: '/products/toys-promo.svg',
-      sku: 'TOY-BOK-005',
-      stockStatus: 'instock',
-      featured: true,
-    },
-    {
-      name: 'Bath Time Care Set',
-      brand: 'Various',
-      category: 'Bath',
-      description: 'Complete bath time essentials for a soothing baby bathing experience.',
-      price: 22.0,
-      imageUrl: '/products/bath-time.svg',
-      sku: 'BTH-SET-006',
-      stockStatus: 'instock',
-      featured: false,
-    },
-    {
-      name: 'Teething Relief',
-      brand: 'Various',
+      imageUrl: 'https://images.unsplash.com/photo-1583947581924-860bda6a26df?w=400',
+      variants: {
+        create: [
+          { sku: 'PP-WW-16', name: '56 Sheets', price: 4, stockQuantity: 30, stockStatus: 'instock' },
+        ]
+      }
+    }
+  })
+
+  const edisonmama = await prisma.product.create({
+    data: {
+      name: 'Edisonmama Teething Babies',
+      brand: 'Edisonmama',
       category: 'Oral Care',
-      description: 'Easy to hold and clean teething relief products for babies.',
-      price: 9.5,
-      imageUrl: '/products/teething.svg',
-      sku: 'TEE-RLF-007',
-      stockStatus: 'instock',
+      description: 'Safe silicone teething toys in fun shapes.',
       featured: true,
-    },
-    {
-      name: 'Cooling Gels',
-      brand: 'Various',
-      category: 'Skincare',
-      description: 'Safe cooling gels suitable for use from newborn.',
-      price: 8.0,
-      imageUrl: '/products/cooling-gel.svg',
-      sku: 'SKN-GEL-008',
-      stockStatus: 'instock',
-      featured: false,
-    },
-    {
-      name: 'Fridababy Triple-Angle Toothhugger',
-      brand: 'Fridababy',
-      category: 'Oral Care',
-      description: 'Innovative 3-angle toothbrush designed to clean all sides of baby teeth.',
-      price: 11.0,
-      imageUrl: '/products/fridababy-toothbrush.svg',
-      sku: 'FRB-TBR-009',
-      stockStatus: 'instock',
-      featured: true,
-    },
-    {
-      name: 'Easy-Hold Spoon & Fork Set',
-      brand: 'Various',
-      category: 'Feeding',
-      description: 'Ergonomic spoon and fork set designed for babies 8 months and up.',
-      price: 7.5,
-      imageUrl: '/products/spoon-fork.svg',
-      sku: 'FED-SPN-010',
-      stockStatus: 'instock',
-      featured: false,
-    },
-  ];
+      imageUrl: 'https://images.unsplash.com/photo-1519689680058-324335c77eba?w=400',
+      variants: {
+        create: [
+          { sku: 'EM-TB-GREEN', name: 'Green', price: 11, stockQuantity: 1, stockStatus: 'instock' },
+          { sku: 'EM-TB-PINK', name: 'Pink', price: 11, stockQuantity: 0, stockStatus: 'outofstock' },
+          { sku: 'EM-TB-EDAMAME', name: 'Edamame', price: 9, stockQuantity: 1, stockStatus: 'instock' },
+          { sku: 'EM-TB-WATERMELON', name: 'Watermelon', price: 9, stockQuantity: 0, stockStatus: 'outofstock' },
+          { sku: 'EM-TB-PRETZEL', name: 'Pretzel', price: 12, stockQuantity: 1, stockStatus: 'instock' },
+        ]
+      }
+    }
+  })
 
-  for (const product of products) {
-    await prisma.product.upsert({
-      where: { sku: product.sku! },
-      update: {},
-      create: product,
-    });
-  }
+  const richellBottle = await prisma.product.create({
+    data: {
+      name: 'Richell Water Bottle',
+      brand: 'Richell',
+      category: 'Bottles',
+      description: 'BPA-free water bottle for toddlers.',
+      featured: false,
+      imageUrl: 'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=400',
+      variants: {
+        create: [
+          { sku: 'RICHELL-WTB-CAR200ML', name: 'Car 200ML', price: 15, stockQuantity: 0, stockStatus: 'outofstock' },
+          { sku: 'RICHELL-WTB-MIFFY', name: 'Miffy 200ML', price: 15, stockQuantity: 1, stockStatus: 'instock' },
+        ]
+      }
+    }
+  })
 
-  console.log('Seed completed: Admin user + 10 products');
+  const pigeonDetergent = await prisma.product.create({
+    data: {
+      name: 'Pigeon Laundry Detergent',
+      brand: 'Pigeon',
+      category: 'Cleaning',
+      description: 'Gentle laundry detergent for baby clothes.',
+      featured: false,
+      imageUrl: 'https://images.unsplash.com/photo-1583947581924-860bda6a26df?w=400',
+      variants: {
+        create: [
+          { sku: 'PG-LD-800ML', name: '800ml', price: 10, stockQuantity: 6, stockStatus: 'instock' },
+        ]
+      }
+    }
+  })
+
+  // Banners
+  await prisma.banner.createMany({
+    data: [
+      { imageUrl: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=800', title: 'New Arrivals', subtitle: 'Premium diapers from USA', active: true, order: 0 },
+      { imageUrl: 'https://images.unsplash.com/photo-1544367563-12123d8965cd?w=800', title: 'Teething Toys', subtitle: 'Safe & fun designs', active: true, order: 1 },
+    ]
+  })
+
+  console.log('Seeded successfully!')
+  console.log(`Products: ${await prisma.product.count()}`)
+  console.log(`Variants: ${await prisma.productVariant.count()}`)
 }
 
 main()
   .catch((e) => {
-    console.error(e);
-    process.exit(1);
+    console.error(e)
+    process.exit(1)
   })
   .finally(async () => {
-    await prisma.$disconnect();
-  });
+    await prisma.$disconnect()
+  })

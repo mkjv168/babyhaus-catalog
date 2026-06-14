@@ -10,7 +10,7 @@ export default async function AdminOrders() {
   if (!user) redirect('/admin/login');
 
   const orders = await prisma.order.findMany({
-    include: { product: { select: { name: true } } },
+    include: { variant: { include: { product: true } } },
     orderBy: { createdAt: 'desc' },
   });
 

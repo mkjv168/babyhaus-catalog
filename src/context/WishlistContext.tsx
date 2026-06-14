@@ -11,6 +11,7 @@ export interface Product {
   imageUrl: string | null;
   stockStatus: string;
   featured: boolean;
+  variantCount?: number;
 }
 
 interface WishlistContextValue {
@@ -25,7 +26,7 @@ interface WishlistContextValue {
 
 const WishlistContext = createContext<WishlistContextValue | null>(null);
 
-const WISHLIST_KEY = 'babyhaus-wishlist';
+const WISHLIST_KEY = 'babyhaus-wishlist-v2';
 
 function loadWishlist(): Product[] {
   if (typeof window === 'undefined') return [];
@@ -46,13 +47,11 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<Product[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate from localStorage on mount
   useEffect(() => {
     setItems(loadWishlist());
     setHydrated(true);
   }, []);
 
-  // Persist on change
   useEffect(() => {
     if (hydrated) saveWishlist(items);
   }, [items, hydrated]);

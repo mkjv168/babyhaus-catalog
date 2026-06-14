@@ -12,7 +12,10 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const product = await prisma.product.findUnique({ 
     where: { id },
-    include: { images: { orderBy: { order: 'asc' } } },
+    include: { 
+      images: { orderBy: { order: 'asc' } },
+      variants: { orderBy: { name: 'asc' } }
+    },
   });
   if (!product) notFound();
 
@@ -23,12 +26,17 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     brand: product.brand || '',
     category: product.category,
     description: product.description || '',
-    price: product.price?.toString() || '',
     images: imageUrls,
-    sku: product.sku || '',
-    stockStatus: product.stockStatus,
-    stockQuantity: product.stockQuantity?.toString() || '0',
     featured: product.featured,
+    variants: product.variants.map(v => ({
+      id: v.id,
+      sku: v.sku,
+      name: v.name,
+      price: v.price?.toString() || '',
+      stockQuantity: v.stockQuantity.toString(),
+      stockStatus: v.stockStatus,
+      imageUrl: v.imageUrl,
+    })),
   };
 
   return (

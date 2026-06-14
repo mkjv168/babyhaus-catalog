@@ -6,13 +6,18 @@ export async function GET(req: NextRequest) {
   try {
     await requireAdmin();
     const orders = await prisma.order.findMany({
-      include: { product: true },
+      include: {
+        variant: {
+          include: {
+            product: { select: { name: true } }
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(orders);
   } catch (e: any) {
     if (e.message === 'Unauthorized') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    // Graceful fallback when DB is unavailable (e.g. static deployment)
     if (e.name === 'PrismaClientInitializationError') {
       return NextResponse.json({ error: 'Database unavailable' }, { status: 503 });
     }
@@ -25,7 +30,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const order = await prisma.order.create({
       data: {
-        productId: body.productId,
+        variantId: body.variantId,
         quantity: body.quantity || 1,
         customerName: body.customerName,
         telegramPhone: body.telegramPhone,
@@ -36,7 +41,6 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json(order);
   } catch (e: any) {
-    // Graceful fallback: if DB is missing, tell user to message on Telegram
     if (e.name === 'PrismaClientInitializationError') {
       return NextResponse.json(
         { fallback: true, message: 'Order received. Please confirm via Telegram @narote' },

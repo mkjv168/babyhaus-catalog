@@ -11,19 +11,25 @@ interface ProductImageData {
   order: number;
 }
 
+interface ProductVariant {
+  id: string;
+  name: string;
+  sku: string | null;
+  price: number | null;
+  stockStatus: string;
+  stockQuantity: number;
+}
+
 interface Product {
   id: string;
   name: string;
   brand: string | null;
   category: string;
   description?: string | null;
-  price: number | null;
   imageUrl: string | null;
-  sku?: string | null;
-  stockStatus: string;
   featured: boolean;
-  variantGroup?: string | null;
   images?: ProductImageData[];
+  variants: ProductVariant[];
 }
 
 interface CompactProductCardProps {
@@ -31,20 +37,45 @@ interface CompactProductCardProps {
   onQuickView?: () => void;
 }
 
+function minPrice(variants: ProductVariant[]): number | null {
+  const prices = variants.map(v => v.price).filter((p): p is number => p !== null);
+  return prices.length > 0 ? Math.min(...prices) : null;
+}
+
+function maxPrice(variants: ProductVariant[]): number | null {
+  const prices = variants.map(v => v.price).filter((p): p is number => p !== null);
+  return prices.length > 0 ? Math.max(...prices) : null;
+}
+
+function aggregateStock(variants: ProductVariant[]): string {
+  if (variants.some(v => v.stockStatus === 'instock')) return 'instock';
+  if (variants.some(v => v.stockStatus === 'preorder')) return 'preorder';
+  return 'outofstock';
+}
+
 export function CompactProductCard({ product, onQuickView }: CompactProductCardProps) {
+  const stockStatus = aggregateStock(product.variants);
   const stockLabel =
-    product.stockStatus === 'instock'
+    stockStatus === 'instock'
       ? 'In Stock'
-      : product.stockStatus === 'preorder'
+      : stockStatus === 'preorder'
       ? 'Pre-Order'
       : 'Out of Stock';
 
   const stockClass =
-    product.stockStatus === 'instock'
+    stockStatus === 'instock'
       ? 'bg-green-50 text-green-600'
-      : product.stockStatus === 'preorder'
+      : stockStatus === 'preorder'
       ? 'bg-amber-50 text-amber-600'
       : 'bg-red-50 text-red-600';
+
+  const lowPrice = minPrice(product.variants);
+  const highPrice = maxPrice(product.variants);
+  const priceDisplay = lowPrice !== null
+    ? (highPrice !== null && highPrice > lowPrice
+      ? `From $${lowPrice.toFixed(2)}`
+      : `$${lowPrice.toFixed(2)}`)
+    : 'Ask';
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (typeof window !== 'undefined' && window.innerWidth < 768 && onQuickView) {
@@ -80,9 +111,9 @@ export function CompactProductCard({ product, onQuickView }: CompactProductCardP
             <p className="text-[#FF6B9D] text-[10px] font-bold tracking-wide uppercase">
               {product.brand || product.category}
             </p>
-            {product.variantGroup && (
+            {product.variants.length > 1 && (
               <span className="text-[9px] font-bold text-[#7a7a7a] bg-[#f5f1ec] px-1.5 py-0 rounded-full">
-                Multiple sizes
+                {product.variants.length} options
               </span>
             )}
           </div>
@@ -91,7 +122,7 @@ export function CompactProductCard({ product, onQuickView }: CompactProductCardP
           </h3>
           <div className="flex items-center justify-between gap-1 mb-2">
             <span className="text-[#FF6B9D] font-bold text-sm">
-              {product.price ? `$${product.price.toFixed(2)}` : 'Ask'}
+              {priceDisplay}
             </span>
             <div className="flex items-center gap-1">
               <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${stockClass}`}>
@@ -105,7 +136,23 @@ export function CompactProductCard({ product, onQuickView }: CompactProductCardP
         </div>
       </Link>
       <div className="px-3 pb-3">
-        <AddToCartButton product={product} variant="card" />
+        <AddToCartButton
+          product={{
+            id: product.id,
+            name: product.name,
+            imageUrl: product.imageUrl,
+            brand: product.brand,
+            category: product.category,
+            variants: product.variants.map(v => ({
+              id: v.id,
+              name: v.name,
+              price: v.price,
+              stockStatus: v.stockStatus,
+              stockQuantity: v.stockQuantity,
+            })),
+          }}
+          variant="card"
+        />
       </div>
     </div>
   );

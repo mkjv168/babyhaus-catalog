@@ -39,12 +39,12 @@ export function CheckoutForm() {
 
     try {
       // Create orders for each item in cart
-      const orderPromises = items.map(item => 
+            const orderPromises = items.map(item => 
         fetch('/api/orders', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            productId: item.id,
+            variantId: item.id,
             quantity: item.quantity,
             customerName: form.customerName,
             telegramPhone: form.telegramPhone,

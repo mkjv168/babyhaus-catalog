@@ -15,20 +15,26 @@ interface ProductImageData {
   order: number;
 }
 
+interface ProductVariant {
+  id: string;
+  name: string;
+  sku: string | null;
+  price: number | null;
+  stockStatus: string;
+  stockQuantity: number;
+}
+
 interface Product {
   id: string;
   name: string;
   brand: string | null;
   category: string;
   description: string | null;
-  price: number | null;
   imageUrl: string | null;
-  sku: string | null;
-  stockStatus: string;
   featured: boolean;
-  variantGroup?: string | null;
   createdAt: Date;
   images?: ProductImageData[];
+  variants: ProductVariant[];
 }
 
 interface CatalogClientProps {
@@ -38,6 +44,17 @@ interface CatalogClientProps {
 
 const PRODUCTS_PER_PAGE_MOBILE = 12;
 const PRODUCTS_PER_PAGE_DESKTOP = 20;
+
+function minPrice(variants: ProductVariant[]): number | null {
+  const prices = variants.map(v => v.price).filter((p): p is number => p !== null);
+  return prices.length > 0 ? Math.min(...prices) : null;
+}
+
+function aggregateStock(variants: ProductVariant[]): string {
+  if (variants.some(v => v.stockStatus === 'instock')) return 'instock';
+  if (variants.some(v => v.stockStatus === 'preorder')) return 'preorder';
+  return 'outofstock';
+}
 
 export function CatalogClient({ products, categories }: CatalogClientProps) {
   const router = useRouter();
@@ -55,7 +72,6 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
   const [isMobile, setIsMobile] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
-  // Detect mobile
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
@@ -63,22 +79,18 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Sync URL params
   const updateUrl = useCallback((updates: Partial<{
     category: string;
     sort: SortOption;
     page: number;
   }>) => {
     const params = new URLSearchParams();
-    
     const newCategory = updates.category ?? activeCategory;
     const newSort = updates.sort ?? sort;
     const newPage = updates.page ?? currentPage;
-    
     if (newCategory !== 'All') params.set('category', newCategory);
     if (newSort !== 'newest') params.set('sort', newSort);
     if (newPage !== 1) params.set('page', newPage.toString());
-    
     const qs = params.toString();
     router.replace(qs ? `/?${qs}` : '/', { scroll: false });
   }, [router, activeCategory, sort, currentPage]);
@@ -108,16 +120,13 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
     setQuickViewProduct(null);
   }, []);
 
-  // Filter and sort products
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // Category filter
     if (activeCategory !== 'All') {
       result = result.filter((p) => p.category === activeCategory);
     }
 
-    // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -126,17 +135,19 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
           (p.brand && p.brand.toLowerCase().includes(q)) ||
           p.category.toLowerCase().includes(q) ||
           (p.description && p.description.toLowerCase().includes(q)) ||
-          (p.sku && p.sku.toLowerCase().includes(q))
+          p.variants.some((v) =>
+            (v.sku && v.sku.toLowerCase().includes(q)) ||
+            v.name.toLowerCase().includes(q)
+          )
       );
     }
 
-    // Sorting
     switch (sort) {
       case 'price-asc':
-        result.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
+        result.sort((a, b) => (minPrice(a.variants) ?? Infinity) - (minPrice(b.variants) ?? Infinity));
         break;
       case 'price-desc':
-        result.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+        result.sort((a, b) => (minPrice(b.variants) ?? -Infinity) - (minPrice(a.variants) ?? -Infinity));
         break;
       case 'name-asc':
         result.sort((a, b) => a.name.localeCompare(b.name));
@@ -150,7 +161,6 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
     return result;
   }, [products, activeCategory, searchQuery, sort]);
 
-  // Pagination
   const productsPerPage = isMobile ? PRODUCTS_PER_PAGE_MOBILE : PRODUCTS_PER_PAGE_DESKTOP;
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const paginatedProducts = useMemo(() => {
@@ -158,7 +168,6 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
     return filteredProducts.slice(start, start + productsPerPage);
   }, [filteredProducts, currentPage, productsPerPage]);
 
-  // Reset to page 1 if current page is out of bounds
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(1);
@@ -166,7 +175,6 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
     }
   }, [currentPage, totalPages, updateUrl]);
 
-  // Focus search if URL param says so
   useEffect(() => {
     if (focusField === 'search') {
       const el = document.getElementById('catalog-search');
@@ -184,7 +192,6 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search */}
       <div id="catalog-search">
         <SearchBar
           value={searchQuery}
@@ -193,7 +200,6 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
         />
       </div>
 
-      {/* Category Pills */}
       <div id="catalog-categories">
         <CategoryPills
           categories={categories}
@@ -203,7 +209,6 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
       </div>
 
       <div className="flex-1">
-        {/* Results header */}
         <div className="flex items-center justify-between gap-3 mb-4">
           <p className="text-sm text-[#6B6B6B]">
             <span className="font-semibold text-[#2D2D2D]">{filteredProducts.length}</span> product
@@ -213,7 +218,6 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
           <SortSelect value={sort} onChange={handleSortChange} />
         </div>
 
-        {/* Product Grid */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-16 text-[#6B6B6B]">
             <p className="text-4xl mb-3">🔍</p>
@@ -231,8 +235,6 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
                 />
               ))}
             </div>
-            
-            {/* Pagination */}
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -242,7 +244,6 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
         )}
       </div>
 
-      {/* Mobile Quick View Sheet */}
       <ProductQuickView
         product={quickViewProduct}
         isOpen={!!quickViewProduct}

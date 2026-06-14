@@ -7,7 +7,7 @@ import StatusButton from './StatusButton';
 
 interface Order {
   id: string;
-  productId: string;
+  variantId: string;
   quantity: number;
   customerName: string;
   telegramPhone: string;
@@ -16,8 +16,14 @@ interface Order {
   notes: string | null;
   status: string;
   createdAt: Date;
-  product: {
+  variant: {
+    id: string;
+    sku: string;
     name: string;
+    price: number | null;
+    product: {
+      name: string;
+    } | null;
   } | null;
 }
 
@@ -54,7 +60,8 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
         (o) =>
           o.customerName.toLowerCase().includes(q) ||
           o.telegramPhone.toLowerCase().includes(q) ||
-          o.product?.name.toLowerCase().includes(q) ||
+          o.variant?.name.toLowerCase().includes(q) ||
+          o.variant?.product?.name.toLowerCase().includes(q) ||
           (o.notes && o.notes.toLowerCase().includes(q))
       );
     }
@@ -159,7 +166,10 @@ export default function OrdersClient({ orders }: OrdersClientProps) {
                   <td className="py-3 px-6 text-sm text-[#7a7a7a] whitespace-nowrap">
                     {new Date(o.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="py-3 pr-4 font-semibold">{o.product?.name || 'Unknown'}</td>
+                  <td className="py-3 pr-4">
+                    <p className="font-semibold">{o.variant?.product?.name || 'Unknown'}</p>
+                    <p className="text-xs text-[#7a7a7a]">{o.variant?.name}</p>
+                  </td>
                   <td className="py-3 pr-4">{o.customerName}</td>
                   <td className="py-3 pr-4 text-[#d4a574] font-medium">{o.telegramPhone}</td>
                   <td className="py-3 pr-4 text-sm text-[#7a7a7a] max-w-[200px] truncate">
