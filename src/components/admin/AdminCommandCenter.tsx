@@ -561,31 +561,31 @@ export default function AdminCommandCenter({
                       {(() => {
                         const imgs = allProductImages(selectedProduct);
                         return imgs.length > 0 ? (
-                          <div className="space-y-3">
-                            <div className="relative aspect-[4/3] bg-[#f5f1ec] rounded-2xl overflow-hidden">
-                              <Image
-                                src={imgs[0]}
-                                alt={selectedProduct.name}
-                                fill
-                                className="object-cover"
-                              />
-                            </div>
-                            {imgs.length > 1 && (
-                              <div className="flex gap-2">
-                                {imgs.map((url, i) => (
-                                  <div
-                                    key={i}
-                                    className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                                      i === 0 ? 'border-[#d4a574]' : 'border-transparent'
-                                    }`}
-                                  >
-                                    <Image src={url} alt="" fill className="object-cover" />
-                                  </div>
-                                ))}
+                            <div className="space-y-3">
+                              <div className="relative aspect-[16/9] max-h-[180px] bg-[#f5f1ec] rounded-2xl overflow-hidden">
+                                <Image
+                                  src={imgs[0]}
+                                  alt={selectedProduct.name}
+                                  fill
+                                  className="object-cover"
+                                />
                               </div>
-                            )}
-                            <p className="text-xs text-[#7a7a7a]">{imgs.length} image{imgs.length !== 1 ? 's' : ''}</p>
-                          </div>
+                              {imgs.length > 1 && (
+                                <div className="flex gap-2">
+                                  {imgs.map((url, i) => (
+                                    <div
+                                      key={i}
+                                      className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${
+                                        i === 0 ? 'border-[#d4a574]' : 'border-transparent'
+                                      }`}
+                                    >
+                                      <Image src={url} alt="" fill className="object-cover" />
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              <p className="text-xs text-[#7a7a7a]">{imgs.length} image{imgs.length !== 1 ? 's' : ''}</p>
+                            </div>
                         ) : (
                           <div className="flex flex-col items-center justify-center py-8 text-[#7a7a7a] bg-[#faf8f5] rounded-xl">
                             <p className="text-3xl mb-2">👶</p>
