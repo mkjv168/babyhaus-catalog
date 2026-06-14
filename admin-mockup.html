@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baby Haus Admin — Mockup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter','sans-serif'] },
+          colors: {
+            warm: { 50:'#fdfbf7', 100:'#faf5ed', 200:'#f3e6d3', 300:'#e8cfad', 400:'#d9b382', 500:'#cc9860', 600:'#bf8048', 700:'#9f673b', 800:'#825335', 900:'#6a452e' },
+            rose: { 50:'#fdf2f2', 100:'#fde8e8', 200:'#fbd5d5', 300:'#f8b4b4', 400:'#f98080', 500:'#f05252', 600:'#e02424' },
+            emerald: { 50:'#ecfdf5', 100:'#d1fae5', 400:'#34d399', 500:'#10b981' },
+            amber: { 50:'#fffbeb', 100:'#fef3c7', 400:'#fbbf24', 500:'#f59e0b' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .col-scroll { height: calc(100vh - 120px); overflow-y: auto; scrollbar-width: thin; }
+    .col-scroll::-webkit-scrollbar { width: 5px; }
+    .col-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 4px; }
+    .selected-item { background: #faf5ed; border-left: 3px solid #cc9860; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    .animate-in { animation: fadeIn 0.25s ease-out; }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+  <!-- ========== TOP BAR ========== -->
+  <header class="bg-white border-b border-gray-200 px-5 py-3 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-gradient-to-br from-warm-400 to-warm-600 rounded-xl flex items-center justify-center text-white font-bold text-lg">B</div>
+      <h1 class="font-bold text-lg text-gray-900">Baby Haus</h1>
+      <span class="text-xs bg-warm-100 text-warm-700 px-2 py-0.5 rounded-full font-medium">Admin</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="#" class="text-sm text-gray-500 hover:text-gray-800 flex items-center gap-1 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        View Storefront
+      </a>
+      <div class="w-8 h-8 bg-warm-200 rounded-full flex items-center justify-center text-warm-700 text-sm font-semibold">M</div>
+    </div>
+  </header>
+
+  <!-- ========== TAB NAV ========== -->
+  <div class="bg-white border-b border-gray-200 px-5">
+    <nav class="flex gap-1 -mb-px">
+      <button onclick="switchTab('products')" id="tab-products" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-warm-500 text-warm-700 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        Products
+      </button>
+      <button onclick="switchTab('bulk')" id="tab-bulk" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        Bulk Uploads
+      </button>
+      <button onclick="switchTab('banners')" id="tab-banners" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
+        Banners
+      </button>
+      <button onclick="switchTab('orders')" id="tab-orders" class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        Orders
+      </button>
+    </nav>
+  </div>
+
+  <!-- ========== PRODUCTS TAB ========== -->
+  <div id="view-products" class="view-section">
+    <div class="flex h-[calc(100vh-110px)]">
+
+      <!-- ==== COLUMN 1: CATEGORIES ==== -->
+      <aside class="w-56 bg-white border-r border-gray-200 flex flex-col">
+        <div class="p-4 border-b border-gray-100">
+          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Categories</h2>
+          <div class="relative">
+            <input type="text" placeholder="Search categories..." class="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-warm-400 focus:border-transparent">
+            <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+        </div>
+
+        <div class="flex-1 col-scroll p-2 space-y-1">
+          <button onclick="selectCategory('all', this)" class="cat-btn w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between hover:bg-gray-50 transition-colors selected-item">
+            <span class="font-medium text-gray-900">All Products</span>
+            <span class="text-xs text-gray-400 font-medium">42</span>
+          </button>
+          <button onclick="selectCategory('diapers', this)" class="cat-btn w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between hover:bg-gray-50 transition-colors">
+            <span class="text-gray-700">Diapers</span>
+            <span class="text-xs text-gray-400">12</span>
+          </button>
+          <button onclick="selectCategory('skincare', this)" class="cat-btn w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between hover:bg-gray-50 transition-colors">
+            <span class="text-gray-700">Skincare</span>
+            <span class="text-xs text-gray-400">8</span>
+          </button>
+          <button onclick="selectCategory('toys', this)" class="cat-btn w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between hover:bg-gray-50 transition-colors">
+            <span class="text-gray-700">Toys</span>
+            <span class="text-xs text-gray-400">9</span>
+          </button>
+          <button onclick="selectCategory('feeding', this)" class="cat-btn w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between hover:bg-gray-50 transition-colors">
+            <span class="text-gray-700">Feeding</span>
+            <span class="text-xs text-gray-400">6</span>
+          </button>
+          <button onclick="selectCategory('clothing', this)" class="cat-btn w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between hover:bg-gray-50 transition-colors">
+            <span class="text-gray-700">Clothing</span>
+            <span class="text-xs text-gray-400">7</span>
+          </button>
+        </div>
+
+        <!-- Stock Filter -->
+        <div class="p-4 border-t border-gray-100">
+          <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Stock Filter</h3>
+          <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+            <button onclick="filterStock('all', this)" class="stock-btn flex-1 py-1.5 text-xs font-medium rounded-md bg-white text-gray-700 shadow-sm">All</button>
+            <button onclick="filterStock('low', this)" class="stock-btn flex-1 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-amber-600">Low</button>
+            <button onclick="filterStock('out', this)" class="stock-btn flex-1 py-1.5 text-xs font-medium rounded-md text-gray-500 hover:text-red-600">Out</button>
+          </div>
+        </div>
+
+        <div class="p-3 border-t border-gray-100">
+          <button class="w-full py-2 bg-warm-500 hover:bg-warm-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Category
+          </button>
+        </div>
+      </aside>
+
+      <!-- ==== COLUMN 2: PRODUCT LIST ==== -->
+      <div class="w-80 bg-gray-50/50 border-r border-gray-200 flex flex-col">
+        <div class="p-4 bg-white border-b border-gray-200">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Products</h2>
+            <span class="text-xs text-gray-400">12 items</span>
+          </div>
+          <div class="relative">
+            <input type="text" placeholder="Search products..." class="w-full pl-8 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-warm-400 focus:border-transparent">
+            <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          </div>
+        </div>
+
+        <div class="flex-1 col-scroll p-3 space-y-2">
+          <!-- Product items -->
+          <div onclick="selectProduct(0)" class="prod-item bg-white rounded-xl p-3 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all selected-product" data-prod="0">
+            <div class="flex gap-3">
+              <div class="w-14 h-14 bg-warm-100 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl">🧸</div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-semibold text-gray-900 truncate">Huggies Overnight Diapers</h3>
+                <p class="text-sm font-bold text-gray-900 mt-0.5">$18.00</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                  <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock
+                  </span>
+                  <span class="text-xs text-gray-400">24 left</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div onclick="selectProduct(1)" class="prod-item bg-white rounded-xl p-3 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all" data-prod="1">
+            <div class="flex gap-3">
+              <div class="w-14 h-14 bg-warm-100 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl">🍼</div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-semibold text-gray-900 truncate">Pampers Baby Dry Size 3</h3>
+                <p class="text-sm font-bold text-gray-900 mt-0.5">$15.00</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                  <span class="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Low Stock
+                  </span>
+                  <span class="text-xs text-gray-400">3 left</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div onclick="selectProduct(2)" class="prod-item bg-white rounded-xl p-3 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all" data-prod="2">
+            <div class="flex gap-3">
+              <div class="w-14 h-14 bg-warm-100 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl">🧴</div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-semibold text-gray-900 truncate">Johnson's Baby Lotion 500ml</h3>
+                <p class="text-sm font-bold text-gray-900 mt-0.5">$8.50</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                  <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock
+                  </span>
+                  <span class="text-xs text-gray-400">45 left</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div onclick="selectProduct(3)" class="prod-item bg-white rounded-xl p-3 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all" data-prod="3">
+            <div class="flex gap-3">
+              <div class="w-14 h-14 bg-warm-100 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl">👶</div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-semibold text-gray-900 truncate">Merries Premium Pants XL</h3>
+                <p class="text-sm font-bold text-gray-900 mt-0.5">$22.00</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                  <span class="inline-flex items-center gap-1 text-xs font-medium text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Out of Stock
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div onclick="selectProduct(4)" class="prod-item bg-white rounded-xl p-3 border border-gray-100 shadow-sm hover:shadow-md cursor-pointer transition-all" data-prod="4">
+            <div class="flex gap-3">
+              <div class="w-14 h-14 bg-warm-100 rounded-lg flex-shrink-0 flex items-center justify-center text-2xl">🪀</div>
+              <div class="flex-1 min-w-0">
+                <h3 class="text-sm font-semibold text-gray-900 truncate">Fisher-Price Rainforest Gym</h3>
+                <p class="text-sm font-bold text-gray-900 mt-0.5">$35.00</p>
+                <div class="flex items-center gap-2 mt-1.5">
+                  <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> In Stock
+                  </span>
+                  <span class="text-xs text-gray-400">8 left</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 bg-white border-t border-gray-200 flex gap-2">
+          <button class="flex-1 py-2 bg-warm-500 hover:bg-warm-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Add Product
+          </button>
+        </div>
+      </div>
+
+      <!-- ==== COLUMN 3: PRODUCT DETAIL ==== -->
+      <main class="flex-1 bg-white flex flex-col min-w-0">
+        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+          <div class="flex gap-1 bg-gray-100 p-1 rounded-lg">
+            <button onclick="switchDetailTab('details', this)" class="det-tab px-4 py-1.5 text-sm font-medium rounded-md bg-white text-gray-800 shadow-sm">Details</button>
+            <button onclick="switchDetailTab('images', this)" class="det-tab px-4 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700">Images</button>
+            <button onclick="switchDetailTab('inventory', this)" class="det-tab px-4 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700">Inventory</button>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors" title="Preview">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+            <button onclick="toggleEdit()" id="edit-btn" class="px-4 py-2 bg-warm-500 hover:bg-warm-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              Edit
+            </button>
+          </div>
+        </div>
+
+        <div id="detail-content" class="flex-1 col-scroll p-6">
+          <!-- DETAILS PANEL -->
+          <div id="panel-details" class="animate-in space-y-6">
+            <!-- Hero Image + Thumbs -->
+            <div>
+              <div class="w-full aspect-[4/3] bg-warm-50 rounded-2xl flex items-center justify-center text-7xl mb-3 border border-warm-100">
+                🧸
+              </div>
+              <div class="flex gap-2 overflow-x-auto hide-scrollbar">
+                <div class="w-16 h-16 rounded-xl bg-warm-100 flex items-center justify-center text-xl ring-2 ring-warm-400 flex-shrink-0">🧸</div>
+                <div class="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center text-gray-300 flex-shrink-0 cursor-pointer hover:bg-gray-200 transition-colors">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Read-only fields -->
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Name</label>
+                  <p id="disp-name" class="text-gray-900 font-medium">Huggies Overnight Diapers</p>
+                  <input id="edit-name" type="text" value="Huggies Overnight Diapers" class="hidden w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-warm-400">
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Brand</label>
+                  <p id="disp-brand" class="text-gray-900">Huggies</p>
+                  <input id="edit-brand" type="text" value="Huggies" class="hidden w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-warm-400">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Price</label>
+                  <p id="disp-price" class="text-gray-900 font-bold text-lg">$18.00</p>
+                  <input id="edit-price" type="text" value="18.00" class="hidden w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-warm-400">
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Category</label>
+                  <span id="disp-category" class="inline-block px-3 py-1 bg-warm-100 text-warm-700 text-sm font-medium rounded-full">Diapers</span>
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Status</label>
+                  <span id="disp-status" class="inline-flex items-center gap-1 text-sm font-medium text-emerald-600">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Featured
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">SKU</label>
+                <p class="text-gray-500 font-mono text-sm">HUG-OVR-S3-001</p>
+              </div>
+
+              <div>
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Description</label>
+                <p id="disp-desc" class="text-gray-600 text-sm leading-relaxed">Our most absorbent diaper, designed for overnight comfort with 12-hour leak protection. Soft breathable outer cover keeps baby's skin dry and comfortable all night long.</p>
+                <textarea id="edit-desc" class="hidden w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-warm-400" rows="4">Our most absorbent diaper, designed for overnight comfort with 12-hour leak protection. Soft breathable outer cover keeps baby's skin dry and comfortable all night long.</textarea>
+              </div>
+
+              <!-- Stock bar -->
+              <div class="bg-gray-50 rounded-xl p-4 flex items-center justify-between">
+                <div>
+                  <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-1">Stock Level</label>
+                  <div class="flex items-center gap-2">
+                    <span class="text-lg font-bold text-gray-900">24</span>
+                    <span class="text-sm text-gray-500">units remaining</span>
+                  </div>
+                </div>
+                <div class="w-32">
+                  <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-emerald-500 rounded-full" style="width: 60%"></div>
+                  </div>
+                  <p class="text-xs text-gray-400 mt-1 text-right">Reorder at 10</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- IMAGES PANEL (hidden by default) -->
+          <div id="panel-images" class="hidden animate-in space-y-4">
+            <div class="border-2 border-dashed border-gray-200 rounded-2xl p-8 text-center hover:border-warm-400 hover:bg-warm-50/50 transition-colors cursor-pointer">
+              <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <p class="text-sm font-medium text-gray-600">Drop images here or click to upload</p>
+              <p class="text-xs text-gray-400 mt-1">PNG, JPG up to 5MB each</p>
+            </div>
+            <div class="grid grid-cols-4 gap-3">
+              <div class="aspect-square bg-warm-50 rounded-xl flex items-center justify-center text-3xl relative group cursor-pointer">
+                🧸
+                <button class="absolute top-1 right-1 w-6 h-6 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-xs">×</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- INVENTORY PANEL (hidden by default) -->
+          <div id="panel-inventory" class="hidden animate-in space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-gray-50 rounded-xl p-4">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">Quantity</label>
+                <input type="number" value="24" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-900" disabled>
+              </div>
+              <div class="bg-gray-50 rounded-xl p-4">
+                <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-2">Reorder Point</label>
+                <input type="number" value="10" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-bold text-gray-900" disabled>
+              </div>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-4">
+              <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider block mb-3">Stock History</label>
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Restocked</span>
+                  <span class="text-gray-900 font-medium">+50 units</span>
+                  <span class="text-gray-400 text-xs">Jun 10</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Sold</span>
+                  <span class="text-gray-900 font-medium">-3 units</span>
+                  <span class="text-gray-400 text-xs">Jun 12</span>
+                </div>
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-gray-600">Sold</span>
+                  <span class="text-gray-900 font-medium">-8 units</span>
+                  <span class="text-gray-400 text-xs">Jun 13</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer actions -->
+        <div id="edit-actions" class="hidden p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-2">
+          <button onclick="toggleEdit()" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded-lg transition-colors">Cancel</button>
+          <button class="px-6 py-2 bg-warm-500 hover:bg-warm-600 text-white text-sm font-medium rounded-lg transition-colors">Save Changes</button>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ========== BULK UPLOADS TAB ========== -->
+  <div id="view-bulk" class="view-section hidden p-8">
+    <div class="max-w-2xl mx-auto text-center">
+      <div class="w-16 h-16 bg-warm-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+        <svg class="w-8 h-8 text-warm-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+      </div>
+      <h2 class="text-xl font-bold text-gray-900 mb-2">Bulk Upload</h2>
+      <p class="text-gray-500 mb-6">Import products via CSV or drag & drop product images</p>
+      <div class="border-2 border-dashed border-gray-200 rounded-2xl p-12 hover:border-warm-400 hover:bg-warm-50/30 transition-colors cursor-pointer">
+        <p class="text-sm text-gray-500">Drop CSV file here, or <span class="text-warm-600 font-medium">browse</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== BANNERS TAB ========== -->
+  <div id="view-banners" class="view-section hidden p-8">
+    <div class="max-w-4xl mx-auto">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-xl font-bold text-gray-900">Promotional Banners</h2>
+        <button class="px-4 py-2 bg-warm-500 hover:bg-warm-600 text-white text-sm font-medium rounded-lg transition-colors">+ Add Banner</button>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+          <div class="aspect-[16/9] bg-gradient-to-br from-warm-300 to-warm-500 rounded-lg mb-3 flex items-center justify-center text-white text-lg font-bold">Summer Sale</div>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-900">Summer Sale 2026</p>
+              <p class="text-xs text-gray-400">Live • Order 2</p>
+            </div>
+            <div class="flex gap-1">
+              <button class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg></button>
+              <button class="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== ORDERS TAB ========== -->
+  <div id="view-orders" class="view-section hidden">
+    <div class="flex h-[calc(100vh-110px)]">
+      <aside class="w-56 bg-white border-r border-gray-200 flex flex-col">
+        <div class="p-4 border-b border-gray-100">
+          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Status</h2>
+        </div>
+        <div class="flex-1 col-scroll p-2 space-y-1">
+          <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between selected-item">
+            <span class="font-medium text-gray-900">All Orders</span>
+            <span class="text-xs text-gray-400">156</span>
+          </button>
+          <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between hover:bg-gray-50">
+            <span class="text-gray-700">Pending</span>
+            <span class="text-xs text-gray-400">12</span>
+          </button>
+          <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between hover:bg-gray-50">
+            <span class="text-gray-700">Processing</span>
+            <span class="text-xs text-gray-400">8</span>
+          </button>
+          <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between hover:bg-gray-50">
+            <span class="text-gray-700">Shipped</span>
+            <span class="text-xs text-gray-400">23</span>
+          </button>
+          <button class="w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between hover:bg-gray-50">
+            <span class="text-gray-700">Delivered</span>
+            <span class="text-xs text-gray-400">98</span>
+          </button>
+        </div>
+      </aside>
+      <div class="flex-1 bg-gray-50/50 p-8 flex items-center justify-center text-gray-400">
+        <p>Select an order to view details</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== TAB SWITCHING =====
+    function switchTab(tab) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('border-warm-500', 'text-warm-700');
+        el.classList.add('border-transparent', 'text-gray-500');
+      });
+      document.getElementById('view-' + tab).classList.remove('hidden');
+      document.getElementById('tab-' + tab).classList.remove('border-transparent', 'text-gray-500');
+      document.getElementById('tab-' + tab).classList.add('border-warm-500', 'text-warm-700');
+    }
+
+    // ===== CATEGORY SELECTION =====
+    function selectCategory(id, btn) {
+      document.querySelectorAll('.cat-btn').forEach(el => {
+        el.classList.remove('selected-item');
+        el.querySelector('span').classList.remove('text-gray-900', 'font-medium');
+        el.querySelector('span').classList.add('text-gray-700');
+      });
+      btn.classList.add('selected-item');
+      btn.querySelector('span').classList.remove('text-gray-700');
+      btn.querySelector('span').classList.add('text-gray-900', 'font-medium');
+    }
+
+    // ===== STOCK FILTER =====
+    function filterStock(type, btn) {
+      document.querySelectorAll('.stock-btn').forEach(el => {
+        el.classList.remove('bg-white', 'text-gray-700', 'shadow-sm');
+        el.classList.add('text-gray-500');
+      });
+      btn.classList.remove('text-gray-500');
+      btn.classList.add('bg-white', 'text-gray-700', 'shadow-sm');
+    }
+
+    // ===== PRODUCT SELECTION =====
+    function selectProduct(id) {
+      document.querySelectorAll('.prod-item').forEach(el => {
+        el.classList.remove('ring-2', 'ring-warm-400', 'bg-warm-50');
+        el.classList.add('bg-white');
+      });
+      const selected = document.querySelector('[data-prod="'+id+'"]');
+      selected.classList.remove('bg-white');
+      selected.classList.add('ring-2', 'ring-warm-400', 'bg-warm-50');
+
+      // Simple content swap for demo
+      const data = [
+        {name:'Huggies Overnight Diapers', brand:'Huggies', price:'18.00', cat:'Diapers', stock:24, stockPct:60, status:'Featured', statusColor:'emerald', emoji:'🧸', desc:'Our most absorbent diaper, designed for overnight comfort with 12-hour leak protection.'},
+        {name:'Pampers Baby Dry Size 3', brand:'Pampers', price:'15.00', cat:'Diapers', stock:3, stockPct:8, status:'Low Stock', statusColor:'amber', emoji:'🍼', desc:'Triple protection system absorbs wetness away from skin for up to 12 hours of dryness.'},
+        {name:"Johnson's Baby Lotion 500ml", brand:"Johnson's", price:'8.50', cat:'Skincare', stock:45, stockPct:90, status:'In Stock', statusColor:'emerald', emoji:'🧴', desc:'Clinically proven mild and gentle for baby skin. 24-hour moisture protection.'},
+        {name:'Merries Premium Pants XL', brand:'Merries', price:'22.00', cat:'Diapers', stock:0, stockPct:0, status:'Out of Stock', statusColor:'rose', emoji:'👶', desc:'Japanese premium diaper with ultra-soft waistband and 3x absorption power.'},
+        {name:'Fisher-Price Rainforest Gym', brand:'Fisher-Price', price:'35.00', cat:'Toys', stock:8, stockPct:25, status:'In Stock', statusColor:'emerald', emoji:'🪀', desc:'Musical activity gym with lights, sounds, and detachable toys for tummy time.'}
+      ];
+      const p = data[id];
+      document.getElementById('disp-name').textContent = p.name;
+      document.getElementById('edit-name').value = p.name;
+      document.getElementById('disp-brand').textContent = p.brand;
+      document.getElementById('edit-brand').value = p.brand;
+      document.getElementById('disp-price').textContent = '$'+p.price;
+      document.getElementById('edit-price').value = p.price;
+      document.getElementById('disp-category').textContent = p.cat;
+      document.getElementById('disp-status').innerHTML = `<span class="w-2 h-2 rounded-full bg-${p.statusColor}-500"></span> ${p.status}`;
+      document.getElementById('disp-status').className = `inline-flex items-center gap-1 text-sm font-medium text-${p.statusColor}-600`;
+      document.getElementById('disp-desc').textContent = p.desc;
+      document.getElementById('edit-desc').value = p.desc;
+
+      // Re-render detail panel to trigger animation
+      const panel = document.getElementById('panel-details');
+      panel.classList.remove('animate-in');
+      void panel.offsetWidth;
+      panel.classList.add('animate-in');
+    }
+
+    // ===== DETAIL TABS =====
+    function switchDetailTab(tab, btn) {
+      document.querySelectorAll('[id^="panel-"]').forEach(el => el.classList.add('hidden'));
+      document.getElementById('panel-' + tab).classList.remove('hidden');
+      document.querySelectorAll('.det-tab').forEach(el => {
+        el.classList.remove('bg-white', 'text-gray-800', 'shadow-sm');
+        el.classList.add('text-gray-500');
+      });
+      btn.classList.remove('text-gray-500');
+      btn.classList.add('bg-white', 'text-gray-800', 'shadow-sm');
+    }
+
+    // ===== EDIT MODE =====
+    let editing = false;
+    function toggleEdit() {
+      editing = !editing;
+      const editBtn = document.getElementById('edit-btn');
+      const actions = document.getElementById('edit-actions');
+      const dispEls = document.querySelectorAll('[id^="disp-"]');
+      const editEls = document.querySelectorAll('[id^="edit-"]');
+
+      if (editing) {
+        editBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> Cancel`;
+        editBtn.classList.remove('bg-warm-500', 'hover:bg-warm-600');
+        editBtn.classList.add('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+        actions.classList.remove('hidden');
+        dispEls.forEach(el => el.classList.add('hidden'));
+        editEls.forEach(el => el.classList.remove('hidden'));
+      } else {
+        editBtn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg> Edit`;
+        editBtn.classList.add('bg-warm-500', 'hover:bg-warm-600');
+        editBtn.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+        actions.classList.add('hidden');
+        dispEls.forEach(el => el.classList.remove('hidden'));
+        editEls.forEach(el => el.classList.add('hidden'));
+      }
+    }
+  </script>
+</body>
+</html>
