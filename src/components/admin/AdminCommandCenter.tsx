@@ -69,7 +69,6 @@ interface AdminCommandCenterProps {
 
 type Tab = 'products' | 'orders' | 'banners' | 'bulk';
 type StockFilter = 'all' | 'instock' | 'outofstock' | 'preorder' | 'lowstock';
-type InspectorTab = 'details' | 'images' | 'inventory';
 
 // ─── Helpers ─────────────────────────────────────────────────────────
 
@@ -117,7 +116,6 @@ export default function AdminCommandCenter({
   // ─ Products: selection
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [inspectorTab, setInspectorTab] = useState<InspectorTab>('details');
 
   // ─ Modals
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -184,7 +182,6 @@ export default function AdminCommandCenter({
   // ─ Handlers
   const handleSelectProduct = (id: string) => {
     setSelectedProductId(id);
-    setInspectorTab('details');
   };
 
   const toggleSelect = (id: string) => {
@@ -557,169 +554,135 @@ export default function AdminCommandCenter({
                     </div>
                   </div>
 
-                  {/* Inspector tabs */}
-                  <div className="flex border-b border-[#e8e4df]">
-                    {([
-                      { key: 'details' as InspectorTab, label: 'Details' },
-                      { key: 'images' as InspectorTab, label: 'Images' },
-                      { key: 'inventory' as InspectorTab, label: 'Inventory' },
-                    ]).map((t) => (
-                      <button
-                        key={t.key}
-                        onClick={() => setInspectorTab(t.key)}
-                        className={`flex-1 py-3 text-sm font-semibold transition-colors border-b-2 ${
-                          inspectorTab === t.key
-                            ? 'text-[#d4a574] border-[#d4a574]'
-                            : 'text-[#7a7a7a] border-transparent hover:text-[#2d2d2d]'
-                        }`}
-                      >
-                        {t.label}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Inspector content */}
-                  <div className="flex-1 overflow-y-auto p-6">
-                    {/* ── Details Tab ── */}
-                    {inspectorTab === 'details' && (
-                      <div className="space-y-6">
-                        {/* Price & SKU row */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-[#faf8f5] rounded-xl p-4">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Price</p>
-                            <p className="text-2xl font-bold text-[#d4a574]">{formatPrice(selectedProduct.price)}</p>
+                  {/* Inspector content — single scrollable view */}
+                  <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                    {/* Images Section */}
+                    <div>
+                      {(() => {
+                        const imgs = allProductImages(selectedProduct);
+                        return imgs.length > 0 ? (
+                          <div className="space-y-3">
+                            <div className="relative aspect-[4/3] bg-[#f5f1ec] rounded-2xl overflow-hidden">
+                              <Image
+                                src={imgs[0]}
+                                alt={selectedProduct.name}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            {imgs.length > 1 && (
+                              <div className="flex gap-2">
+                                {imgs.map((url, i) => (
+                                  <div
+                                    key={i}
+                                    className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                                      i === 0 ? 'border-[#d4a574]' : 'border-transparent'
+                                    }`}
+                                  >
+                                    <Image src={url} alt="" fill className="object-cover" />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            <p className="text-xs text-[#7a7a7a]">{imgs.length} image{imgs.length !== 1 ? 's' : ''}</p>
                           </div>
-                          <div className="bg-[#faf8f5] rounded-xl p-4">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">SKU</p>
-                            <p className="text-lg font-semibold">{selectedProduct.sku || '—'}</p>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-8 text-[#7a7a7a] bg-[#faf8f5] rounded-xl">
+                            <p className="text-3xl mb-2">👶</p>
+                            <p className="text-sm font-medium">No images</p>
                           </div>
-                        </div>
+                        );
+                      })()}
+                    </div>
 
-                        {/* Status badges */}
-                        <div className="flex flex-wrap gap-2">
-                          <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}>
-                            {stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)} {stockLabel(selectedProduct.stockStatus)}
-                          </span>
-                          {selectedProduct.featured && (
-                            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#d4a574] text-white">
-                              <Star className="w-3 h-3 fill-white" /> Featured
-                            </span>
-                          )}
-                          {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
-                            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100">
-                              <AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left
-                            </span>
-                          )}
-                        </div>
+                    {/* Price & SKU row */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-[#faf8f5] rounded-xl p-4">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Price</p>
+                        <p className="text-2xl font-bold text-[#d4a574]">{formatPrice(selectedProduct.price)}</p>
+                      </div>
+                      <div className="bg-[#faf8f5] rounded-xl p-4">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">SKU</p>
+                        <p className="text-lg font-semibold">{selectedProduct.sku || '—'}</p>
+                      </div>
+                    </div>
 
-                        {/* Description */}
+                    {/* Status badges */}
+                    <div className="flex flex-wrap gap-2">
+                      <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}>
+                        {stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)} {stockLabel(selectedProduct.stockStatus)}
+                      </span>
+                      {selectedProduct.featured && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#d4a574] text-white">
+                          <Star className="w-3 h-3 fill-white" /> Featured
+                        </span>
+                      )}
+                      {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100">
+                          <AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Inventory mini-cards */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-[#faf8f5] rounded-xl p-4 text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Stock Status</p>
+                        <p className="text-lg font-bold">{stockLabel(selectedProduct.stockStatus)}</p>
+                        <span className="text-2xl mt-1 block">{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}</span>
+                      </div>
+                      <div className="bg-[#faf8f5] rounded-xl p-4 text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Quantity</p>
+                        <p className={`text-3xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-red-500' : 'text-[#2d2d2d]'}`}>
+                          {selectedProduct.stockQuantity}
+                        </p>
+                        <p className="text-xs text-[#7a7a7a] mt-1">units</p>
+                      </div>
+                    </div>
+
+                    {/* Warnings */}
+                    {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
+                      <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
                         <div>
-                          <h4 className="text-sm font-bold mb-2">Description</h4>
-                          <p className="text-sm text-[#7a7a7a] leading-relaxed bg-[#faf8f5] rounded-xl p-4">
-                            {selectedProduct.description || 'No description provided.'}
+                          <p className="text-sm font-semibold text-red-600">Low Stock Warning</p>
+                          <p className="text-xs text-red-500 mt-1">
+                            Only {selectedProduct.stockQuantity} units remaining. Consider restocking soon.
                           </p>
                         </div>
-
-                        {/* Meta */}
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Brand</p>
-                            <p className="font-medium">{selectedProduct.brand || '—'}</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Category</p>
-                            <p className="font-medium">{selectedProduct.category}</p>
-                          </div>
+                      </div>
+                    )}
+                    {selectedProduct.stockStatus === 'outofstock' && (
+                      <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-red-600">Out of Stock</p>
+                          <p className="text-xs text-red-500 mt-1">
+                            This product is currently unavailable for purchase.
+                          </p>
                         </div>
                       </div>
                     )}
 
-                    {/* ── Images Tab ── */}
-                    {inspectorTab === 'images' && (
-                      <div className="space-y-4">
-                        {(() => {
-                          const imgs = allProductImages(selectedProduct);
-                          return imgs.length > 0 ? (
-                            <>
-                              {/* Hero */}
-                              <div className="relative aspect-[4/3] bg-[#f5f1ec] rounded-2xl overflow-hidden">
-                                <Image
-                                  src={imgs[0]}
-                                  alt={selectedProduct.name}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                              {/* Thumbnails */}
-                              {imgs.length > 1 && (
-                                <div className="flex gap-2">
-                                  {imgs.map((url, i) => (
-                                    <div
-                                      key={i}
-                                      className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                                        i === 0 ? 'border-[#d4a574]' : 'border-transparent'
-                                      }`}
-                                    >
-                                      <Image src={url} alt="" fill className="object-cover" />
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                              <p className="text-xs text-[#7a7a7a]">{imgs.length} image{imgs.length !== 1 ? 's' : ''}</p>
-                            </>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-[#7a7a7a]">
-                              <p className="text-4xl mb-2">👶</p>
-                              <p className="text-sm font-medium">No images</p>
-                            </div>
-                          );
-                        })()}
+                    {/* Description */}
+                    <div>
+                      <h4 className="text-sm font-bold mb-2">Description</h4>
+                      <p className="text-sm text-[#7a7a7a] leading-relaxed bg-[#faf8f5] rounded-xl p-4">
+                        {selectedProduct.description || 'No description provided.'}
+                      </p>
+                    </div>
+
+                    {/* Meta */}
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Brand</p>
+                        <p className="font-medium">{selectedProduct.brand || '—'}</p>
                       </div>
-                    )}
-
-                    {/* ── Inventory Tab ── */}
-                    {inspectorTab === 'inventory' && (
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="bg-[#faf8f5] rounded-xl p-4 text-center">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Stock Status</p>
-                            <p className="text-lg font-bold">{stockLabel(selectedProduct.stockStatus)}</p>
-                            <span className="text-2xl mt-1 block">{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}</span>
-                          </div>
-                          <div className="bg-[#faf8f5] rounded-xl p-4 text-center">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Quantity</p>
-                            <p className={`text-3xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-red-500' : 'text-[#2d2d2d]'}`}>
-                              {selectedProduct.stockQuantity}
-                            </p>
-                            <p className="text-xs text-[#7a7a7a] mt-1">units</p>
-                          </div>
-                        </div>
-
-                        {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
-                          <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3">
-                            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm font-semibold text-red-600">Low Stock Warning</p>
-                              <p className="text-xs text-red-500 mt-1">
-                                Only {selectedProduct.stockQuantity} units remaining. Consider restocking soon.
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {selectedProduct.stockStatus === 'outofstock' && (
-                          <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3">
-                            <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                            <div>
-                              <p className="text-sm font-semibold text-red-600">Out of Stock</p>
-                              <p className="text-xs text-red-500 mt-1">
-                                This product is currently unavailable for purchase.
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Category</p>
+                        <p className="font-medium">{selectedProduct.category}</p>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </>
               ) : (
