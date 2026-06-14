@@ -11,6 +11,7 @@ import {
 import AdminBannerSection from '@/components/AdminBannerSection';
 import ImportModal from '@/app/admin/products/ImportModal';
 import EditModal from '@/app/admin/products/EditModal';
+import ProductForm from '@/app/admin/products/ProductForm';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -127,6 +128,9 @@ export default function AdminCommandCenter({
   const [showMobileInspector, setShowMobileInspector] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // ─ Desktop inline editing
+  const [isEditing, setIsEditing] = useState(false);
+
   // ─ Derived
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === selectedProductId) || null,
@@ -186,6 +190,7 @@ export default function AdminCommandCenter({
   // ─ Handlers
   const handleSelectProduct = (id: string) => {
     setSelectedProductId(id);
+    setIsEditing(false);
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       setShowMobileInspector(true);
     }
@@ -415,46 +420,81 @@ export default function AdminCommandCenter({
                 {selectedProduct ? (
                   <>
                     <div className="px-6 py-4 border-b border-[#e8e4df] flex items-center justify-between">
-                      <div><h2 className="text-lg font-bold">{selectedProduct.name}</h2><p className="text-xs text-[#7a7a7a]">{selectedProduct.category}{selectedProduct.brand ? ` • ${selectedProduct.brand}` : ''}</p></div>
+                      {isEditing ? (
+                        <h2 className="text-lg font-bold">Edit Product</h2>
+                      ) : (
+                        <div><h2 className="text-lg font-bold">{selectedProduct.name}</h2><p className="text-xs text-[#7a7a7a]">{selectedProduct.category}{selectedProduct.brand ? ` • ${selectedProduct.brand}` : ''}</p></div>
+                      )}
                       <div className="flex items-center gap-2">
-                        <button onClick={() => openEdit(selectedProduct)} className="flex items-center gap-1.5 px-4 py-2 bg-[#d4a574] text-white text-sm font-semibold rounded-full hover:bg-[#c49464] transition-colors"><Edit3 className="w-3.5 h-3.5" />Edit</button>
-                        <button onClick={() => { if (confirm('Delete this product?')) { fetch(`/api/products/${selectedProduct.id}`, { method: 'DELETE' }).then(() => { setSelectedProductId(null); router.refresh(); }); } }} className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"><Trash2 className="w-4 h-4" /></button>
+                        {!isEditing && (
+                          <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 px-4 py-2 bg-[#d4a574] text-white text-sm font-semibold rounded-full hover:bg-[#c49464] transition-colors"><Edit3 className="w-3.5 h-3.5" />Edit</button>
+                        )}
+                        <button onClick={() => { if (confirm('Delete this product?')) { fetch(`/api/products/${selectedProduct.id}`, { method: 'DELETE' }).then(() => { setSelectedProductId(null); setIsEditing(false); router.refresh(); }); } }} className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
                     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                      <div>
-                        {(() => { const imgs = allProductImages(selectedProduct); return imgs.length > 0 ? (
-                          <div className="space-y-3">
-                            <div className="relative aspect-[16/9] max-h-[180px] bg-[#f5f1ec] rounded-2xl overflow-hidden"><Image src={imgs[0]} alt={selectedProduct.name} fill className="object-cover" /></div>
-                            {imgs.length > 1 && <div className="flex gap-2">{imgs.map((url, i) => (<div key={i} className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${i === 0 ? 'border-[#d4a574]' : 'border-transparent'}`}><Image src={url} alt="" fill className="object-cover" /></div>))}</div>}
-                            <p className="text-xs text-[#7a7a7a]">{imgs.length} image{imgs.length !== 1 ? 's' : ''}</p>
+                      {isEditing ? (
+                        <ProductForm
+                          initial={{
+                            name: selectedProduct.name,
+                            brand: selectedProduct.brand || '',
+                            category: selectedProduct.category,
+                            description: selectedProduct.description || '',
+                            price: selectedProduct.price?.toString() || '',
+                            images: (() => {
+                              const urls: string[] = [];
+                              if (selectedProduct.imageUrl) urls.push(selectedProduct.imageUrl);
+                              selectedProduct.images
+                                .sort((a, b) => a.order - b.order)
+                                .forEach((img) => { if (!urls.includes(img.url)) urls.push(img.url); });
+                              return urls;
+                            })(),
+                            sku: selectedProduct.sku || '',
+                            stockStatus: selectedProduct.stockStatus,
+                            stockQuantity: selectedProduct.stockQuantity?.toString() || '0',
+                            featured: selectedProduct.featured,
+                          }}
+                          productId={selectedProduct.id}
+                          onSuccess={() => { setIsEditing(false); setSelectedIds(new Set()); router.refresh(); }}
+                          onCancel={() => setIsEditing(false)}
+                        />
+                      ) : (
+                        <>
+                          <div>
+                            {(() => { const imgs = allProductImages(selectedProduct); return imgs.length > 0 ? (
+                              <div className="space-y-3">
+                                <div className="relative aspect-[16/9] max-h-[180px] bg-[#f5f1ec] rounded-2xl overflow-hidden"><Image src={imgs[0]} alt={selectedProduct.name} fill className="object-cover" /></div>
+                                {imgs.length > 1 && <div className="flex gap-2">{imgs.map((url, i) => (<div key={i} className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${i === 0 ? 'border-[#d4a574]' : 'border-transparent'}`}><Image src={url} alt="" fill className="object-cover" /></div>))}</div>}
+                                <p className="text-xs text-[#7a7a7a]">{imgs.length} image{imgs.length !== 1 ? 's' : ''}</p>
+                              </div>
+                            ) : (<div className="flex flex-col items-center justify-center py-8 text-[#7a7a7a] bg-[#faf8f5] rounded-xl"><p className="text-3xl mb-2">👶</p><p className="text-sm font-medium">No images</p></div>); })()}
                           </div>
-                        ) : (<div className="flex flex-col items-center justify-center py-8 text-[#7a7a7a] bg-[#faf8f5] rounded-xl"><p className="text-3xl mb-2">👶</p><p className="text-sm font-medium">No images</p></div>); })()}
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-[#faf8f5] rounded-xl p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Price</p><p className="text-2xl font-bold text-[#d4a574]">{formatPrice(selectedProduct.price)}</p></div>
-                        <div className="bg-[#faf8f5] rounded-xl p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">SKU</p><p className="text-lg font-semibold">{selectedProduct.sku || '—'}</p></div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}>{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)} {stockLabel(selectedProduct.stockStatus)}</span>
-                        {selectedProduct.featured && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#d4a574] text-white"><Star className="w-3 h-3 fill-white" /> Featured</span>}
-                        {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100"><AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left</span>}
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-[#faf8f5] rounded-xl p-4 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Stock Status</p><p className="text-lg font-bold">{stockLabel(selectedProduct.stockStatus)}</p><span className="text-2xl mt-1 block">{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}</span></div>
-                        <div className="bg-[#faf8f5] rounded-xl p-4 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Quantity</p><p className={`text-3xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-red-500' : 'text-[#2d2d2d]'}`}>{selectedProduct.stockQuantity}</p><p className="text-xs text-[#7a7a7a] mt-1">units</p></div>
-                      </div>
-                      {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
-                        <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3"><AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /><div><p className="text-sm font-semibold text-red-600">Low Stock Warning</p><p className="text-xs text-red-500 mt-1">Only {selectedProduct.stockQuantity} units remaining. Consider restocking soon.</p></div></div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-[#faf8f5] rounded-xl p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Price</p><p className="text-2xl font-bold text-[#d4a574]">{formatPrice(selectedProduct.price)}</p></div>
+                            <div className="bg-[#faf8f5] rounded-xl p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">SKU</p><p className="text-lg font-semibold">{selectedProduct.sku || '—'}</p></div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}>{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)} {stockLabel(selectedProduct.stockStatus)}</span>
+                            {selectedProduct.featured && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#d4a574] text-white"><Star className="w-3 h-3 fill-white" /> Featured</span>}
+                            {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100"><AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left</span>}
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-[#faf8f5] rounded-xl p-4 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Stock Status</p><p className="text-lg font-bold">{stockLabel(selectedProduct.stockStatus)}</p><span className="text-2xl mt-1 block">{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}</span></div>
+                            <div className="bg-[#faf8f5] rounded-xl p-4 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Quantity</p><p className={`text-3xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-red-500' : 'text-[#2d2d2d]'}`}>{selectedProduct.stockQuantity}</p><p className="text-xs text-[#7a7a7a] mt-1">units</p></div>
+                          </div>
+                          {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
+                            <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3"><AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /><div><p className="text-sm font-semibold text-red-600">Low Stock Warning</p><p className="text-xs text-red-500 mt-1">Only {selectedProduct.stockQuantity} units remaining. Consider restocking soon.</p></div></div>
+                          )}
+                          {selectedProduct.stockStatus === 'outofstock' && (
+                            <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3"><AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /><div><p className="text-sm font-semibold text-red-600">Out of Stock</p><p className="text-xs text-red-500 mt-1">This product is currently unavailable for purchase.</p></div></div>
+                          )}
+                          <div><h4 className="text-sm font-bold mb-2">Description</h4><p className="text-sm text-[#7a7a7a] leading-relaxed bg-[#faf8f5] rounded-xl p-4">{selectedProduct.description || 'No description provided.'}</p></div>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Brand</p><p className="font-medium">{selectedProduct.brand || '—'}</p></div>
+                            <div><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Category</p><p className="font-medium">{selectedProduct.category}</p></div>
+                          </div>
+                        </>
                       )}
-                      {selectedProduct.stockStatus === 'outofstock' && (
-                        <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3"><AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /><div><p className="text-sm font-semibold text-red-600">Out of Stock</p><p className="text-xs text-red-500 mt-1">This product is currently unavailable for purchase.</p></div></div>
-                      )}
-                      <div><h4 className="text-sm font-bold mb-2">Description</h4><p className="text-sm text-[#7a7a7a] leading-relaxed bg-[#faf8f5] rounded-xl p-4">{selectedProduct.description || 'No description provided.'}</p></div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Brand</p><p className="font-medium">{selectedProduct.brand || '—'}</p></div>
-                        <div><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Category</p><p className="font-medium">{selectedProduct.category}</p></div>
-                      </div>
                     </div>
                   </>
                 ) : (
