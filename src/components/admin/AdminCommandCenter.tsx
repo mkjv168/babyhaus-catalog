@@ -74,10 +74,10 @@ type StockFilter = 'all' | 'instock' | 'outofstock' | 'preorder' | 'lowstock';
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 const stockDot = (status: string, qty: number) => {
-  if (status === 'outofstock') return '🔴';
-  if (status === 'preorder') return '🟡';
-  if (qty > 0 && qty <= 5) return '🟠';
-  return '🟢';
+  if (status === 'outofstock') return 'bg-red-500';
+  if (status === 'preorder') return 'bg-amber-400';
+  if (qty > 0 && qty <= 5) return 'bg-orange-400';
+  return 'bg-emerald-500';
 };
 
 const stockLabel = (status: string) => {
@@ -87,9 +87,9 @@ const stockLabel = (status: string) => {
 };
 
 const stockBadgeClass = (status: string) => {
-  if (status === 'instock') return 'bg-green-50 text-green-600 border-green-100';
-  if (status === 'preorder') return 'bg-amber-50 text-amber-600 border-amber-100';
-  return 'bg-red-50 text-red-600 border-red-100';
+  if (status === 'instock') return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+  if (status === 'preorder') return 'bg-amber-50 text-amber-700 border-amber-100';
+  return 'bg-red-50 text-red-700 border-red-100';
 };
 
 const formatPrice = (price: number | null) =>
@@ -368,9 +368,16 @@ export default function AdminCommandCenter({
                   <div>
                     <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-3">Stock Status</h3>
                     <div className="space-y-1">
-                      {([{ key: 'all', label: 'All Stock', dot: '⚪' },{ key: 'instock', label: 'In Stock', dot: '🟢' },{ key: 'lowstock', label: 'Low Stock', dot: '🟠' },{ key: 'outofstock', label: 'Out of Stock', dot: '🔴' },{ key: 'preorder', label: 'Pre-Order', dot: '🟡' }] as { key: StockFilter; label: string; dot: string }[]).map((f) => (
-                        <button key={f.key} onClick={() => setStockFilter(f.key)} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${stockFilter === f.key ? 'bg-[#f5f1ec] text-[#d4a574] font-semibold' : 'hover:bg-[#f5f1ec]/50 text-[#2d2d2d]'}`}>
-                          <span>{f.dot}</span><span>{f.label}</span>
+                      {([
+                        { key: 'all' as StockFilter, label: 'All Stock', dotClass: 'bg-[#7a7a7a]' },
+                        { key: 'instock' as StockFilter, label: 'In Stock', dotClass: 'bg-emerald-500' },
+                        { key: 'lowstock' as StockFilter, label: 'Low Stock', dotClass: 'bg-orange-400' },
+                        { key: 'outofstock' as StockFilter, label: 'Out of Stock', dotClass: 'bg-red-500' },
+                        { key: 'preorder' as StockFilter, label: 'Pre-Order', dotClass: 'bg-amber-400' },
+                      ]).map((f) => (
+                        <button key={f.key} onClick={() => setStockFilter(f.key)} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${stockFilter === f.key ? 'bg-[#f5f1ec] text-[#d4a574] font-semibold' : 'hover:bg-[#f5f1ec]/50 text-[#2d2d2d]'}`}>
+                          <span className={`w-2.5 h-2.5 rounded-full ${f.dotClass}`} />
+                          <span>{f.label}</span>
                         </button>
                       ))}
                     </div>
@@ -398,19 +405,53 @@ export default function AdminCommandCenter({
                 )}
                 <div className="flex-1 overflow-y-auto">
                   {filteredProducts.map((p) => (
-                    <div key={p.id} onClick={() => handleSelectProduct(p.id)} className={`group flex items-center gap-3 px-4 py-3 border-b border-[#e8e4df]/60 cursor-pointer transition-all ${selectedProductId === p.id ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}>
-                      <input type="checkbox" checked={selectedIds.has(p.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(p.id); }} className="w-4 h-4 accent-[#d4a574] rounded shrink-0" />
-                      <div className="w-10 h-10 relative bg-[#f5f1ec] rounded-lg overflow-hidden shrink-0">{p.imageUrl ? <Image src={p.imageUrl} alt={p.name} fill className="object-cover" /> : <span className="text-sm flex items-center justify-center h-full">👶</span>}</div>
+                    <div key={p.id} onClick={() => handleSelectProduct(p.id)} className={`group flex items-center gap-3 px-4 py-2.5 border-b border-[#e8e4df]/50 cursor-pointer transition-all duration-150 ${selectedProductId === p.id ? 'bg-white shadow-sm ring-1 ring-[#d4a574]/20' : 'hover:bg-white/60'}`}>
+                      <input type="checkbox" checked={selectedIds.has(p.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(p.id); }} className="w-4 h-4 accent-[#d4a574] rounded shrink-0 cursor-pointer" />
+                      <div className="w-9 h-9 relative bg-[#f5f1ec] rounded-lg overflow-hidden shrink-0 border border-[#e8e4df]/60">{p.imageUrl ? <Image src={p.imageUrl} alt={p.name} fill className="object-cover" /> : <span className="text-xs flex items-center justify-center h-full text-[#7a7a7a]">👶</span>}</div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2"><p className="text-sm font-semibold truncate">{p.name}</p>{p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}</div>
-                        <div className="flex items-center gap-2 mt-0.5"><span className="text-[10px] text-[#7a7a7a]">{p.category}</span><span className="text-[10px] text-[#d4a574] font-medium">{formatPrice(p.price)}</span></div>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-semibold text-[#2d2d2d] truncate">{p.name}</p>
+                          {p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0">
+                          <span className="text-[10px] text-[#7a7a7a]">{p.category}</span>
+                          <span className="text-[10px] text-[#d4a574] font-semibold">{formatPrice(p.price)}</span>
+                          {p.stockQuantity > 0 && p.stockQuantity <= 5 && p.stockStatus === 'instock' && (
+                            <span className="text-[9px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0 rounded-full">{p.stockQuantity} left</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="text-right shrink-0"><span className="text-base" title={`${stockLabel(p.stockStatus)}${p.stockQuantity > 0 && p.stockQuantity <= 5 ? ` (${p.stockQuantity} left)` : ''}`}>{stockDot(p.stockStatus, p.stockQuantity)}</span></div>
-                      <ChevronRight className={`w-4 h-4 text-[#7a7a7a] shrink-0 transition-opacity ${selectedProductId === p.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#faf8f5] border border-[#e8e4df]/60">
+                          <span className={`w-2 h-2 rounded-full ${stockDot(p.stockStatus, p.stockQuantity)}`} />
+                          <span className="text-[10px] font-medium text-[#7a7a7a]">{stockLabel(p.stockStatus)}</span>
+                        </div>
+                        <ChevronRight className={`w-3.5 h-3.5 text-[#7a7a7a] shrink-0 transition-all duration-150 ${selectedProductId === p.id ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-1 group-hover:opacity-40 group-hover:translate-x-0'}`} />
+                      </div>
                     </div>
                   ))}
                   {filteredProducts.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-16 text-[#7a7a7a]"><p className="text-3xl mb-2">🔍</p><p className="text-sm font-medium">No products found</p></div>
+                    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                      {searchQuery || categoryFilter !== 'All' || stockFilter !== 'all' ? (
+                        <>
+                          <div className="w-16 h-16 rounded-full bg-[#f5f1ec] flex items-center justify-center mb-4">
+                            <Search className="w-7 h-7 text-[#d4a574]" />
+                          </div>
+                          <p className="text-sm font-semibold text-[#2d2d2d] mb-1">No matching products</p>
+                          <p className="text-xs text-[#7a7a7a] mb-4">Try adjusting your search or filters</p>
+                          <button onClick={() => { setSearchQuery(''); setCategoryFilter('All'); setStockFilter('all'); }} className="px-4 py-2 bg-white border border-[#e8e4df] text-xs font-semibold rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors">Clear all filters</button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-16 h-16 rounded-full bg-[#f5f1ec] flex items-center justify-center mb-4">
+                            <Package className="w-7 h-7 text-[#d4a574]" />
+                          </div>
+                          <p className="text-sm font-semibold text-[#2d2d2d] mb-1">No products yet</p>
+                          <p className="text-xs text-[#7a7a7a] mb-4">Add your first product to get started</p>
+                          <button onClick={() => openEdit(null)} className="px-4 py-2 bg-[#d4a574] text-white text-xs font-semibold rounded-full hover:bg-[#c49464] transition-colors">Add Product</button>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -474,16 +515,26 @@ export default function AdminCommandCenter({
                             <div className="bg-[#faf8f5] rounded-xl p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">SKU</p><p className="text-lg font-semibold">{selectedProduct.sku || '—'}</p></div>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}>{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)} {stockLabel(selectedProduct.stockStatus)}</span>
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}><span className={`w-2 h-2 rounded-full ${stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}`} /> {stockLabel(selectedProduct.stockStatus)}</span>
                             {selectedProduct.featured && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#d4a574] text-white"><Star className="w-3 h-3 fill-white" /> Featured</span>}
-                            {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100"><AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left</span>}
+                            {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-100"><AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left</span>}
                           </div>
                           <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-[#faf8f5] rounded-xl p-4 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Stock Status</p><p className="text-lg font-bold">{stockLabel(selectedProduct.stockStatus)}</p><span className="text-2xl mt-1 block">{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}</span></div>
-                            <div className="bg-[#faf8f5] rounded-xl p-4 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Quantity</p><p className={`text-3xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-red-500' : 'text-[#2d2d2d]'}`}>{selectedProduct.stockQuantity}</p><p className="text-xs text-[#7a7a7a] mt-1">units</p></div>
+                            <div className="bg-[#faf8f5] rounded-xl p-4 text-center">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Stock Status</p>
+                              <div className="flex items-center justify-center gap-2 mt-1">
+                                <span className={`w-3 h-3 rounded-full ${stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}`} />
+                                <p className="text-lg font-bold">{stockLabel(selectedProduct.stockStatus)}</p>
+                              </div>
+                            </div>
+                            <div className="bg-[#faf8f5] rounded-xl p-4 text-center">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Quantity</p>
+                              <p className={`text-3xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-orange-500' : 'text-[#2d2d2d]'}`}>{selectedProduct.stockQuantity}</p>
+                              <p className="text-xs text-[#7a7a7a] mt-1">units</p>
+                            </div>
                           </div>
                           {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
-                            <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3"><AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /><div><p className="text-sm font-semibold text-red-600">Low Stock Warning</p><p className="text-xs text-red-500 mt-1">Only {selectedProduct.stockQuantity} units remaining. Consider restocking soon.</p></div></div>
+                            <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3"><AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /><div><p className="text-sm font-semibold text-orange-600">Low Stock Warning</p><p className="text-xs text-orange-500 mt-1">Only {selectedProduct.stockQuantity} units remaining. Consider restocking soon.</p></div></div>
                           )}
                           {selectedProduct.stockStatus === 'outofstock' && (
                             <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3"><AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /><div><p className="text-sm font-semibold text-red-600">Out of Stock</p><p className="text-xs text-red-500 mt-1">This product is currently unavailable for purchase.</p></div></div>
@@ -534,19 +585,50 @@ export default function AdminCommandCenter({
               <div className="flex-1 overflow-y-auto">
                 <p className="px-4 py-2 text-xs font-semibold text-[#7a7a7a]">{filteredProducts.length} products</p>
                 {filteredProducts.map((p) => (
-                  <div key={p.id} onClick={() => handleSelectProduct(p.id)} className={`group flex items-center gap-3 px-4 py-3 border-b border-[#e8e4df]/60 cursor-pointer transition-all ${selectedProductId === p.id ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}>
-                    <input type="checkbox" checked={selectedIds.has(p.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(p.id); }} className="w-4 h-4 accent-[#d4a574] rounded shrink-0" />
-                    <div className="w-10 h-10 relative bg-[#f5f1ec] rounded-lg overflow-hidden shrink-0">{p.imageUrl ? <Image src={p.imageUrl} alt={p.name} fill className="object-cover" /> : <span className="text-sm flex items-center justify-center h-full">👶</span>}</div>
+                  <div key={p.id} onClick={() => handleSelectProduct(p.id)} className={`group flex items-center gap-3 px-4 py-2.5 border-b border-[#e8e4df]/50 cursor-pointer transition-all duration-150 ${selectedProductId === p.id ? 'bg-white shadow-sm ring-1 ring-[#d4a574]/20' : 'hover:bg-white/60'}`}>
+                    <input type="checkbox" checked={selectedIds.has(p.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(p.id); }} className="w-4 h-4 accent-[#d4a574] rounded shrink-0 cursor-pointer" />
+                    <div className="w-9 h-9 relative bg-[#f5f1ec] rounded-lg overflow-hidden shrink-0 border border-[#e8e4df]/60">{p.imageUrl ? <Image src={p.imageUrl} alt={p.name} fill className="object-cover" /> : <span className="text-xs flex items-center justify-center h-full text-[#7a7a7a]">👶</span>}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2"><p className="text-sm font-semibold truncate">{p.name}</p>{p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}</div>
-                      <div className="flex items-center gap-2 mt-0.5"><span className="text-[10px] text-[#7a7a7a]">{p.category}</span><span className="text-[10px] text-[#d4a574] font-medium">{formatPrice(p.price)}</span></div>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold text-[#2d2d2d] truncate">{p.name}</p>
+                        {p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}
+                      </div>
+                      <div className="flex items-center gap-2 mt-0">
+                        <span className="text-[10px] text-[#7a7a7a]">{p.category}</span>
+                        <span className="text-[10px] text-[#d4a574] font-semibold">{formatPrice(p.price)}</span>
+                      </div>
                     </div>
-                    <div className="text-right shrink-0"><span className="text-base" title={`${stockLabel(p.stockStatus)}${p.stockQuantity > 0 && p.stockQuantity <= 5 ? ` (${p.stockQuantity} left)` : ''}`}>{stockDot(p.stockStatus, p.stockQuantity)}</span></div>
-                    <ChevronRight className="w-4 h-4 text-[#7a7a7a] shrink-0" />
+                    <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#faf8f5] border border-[#e8e4df]/60">
+                        <span className={`w-2 h-2 rounded-full ${stockDot(p.stockStatus, p.stockQuantity)}`} />
+                        <span className="text-[10px] font-medium text-[#7a7a7a]">{stockLabel(p.stockStatus)}</span>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#7a7a7a] shrink-0" />
+                    </div>
                   </div>
                 ))}
                 {filteredProducts.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-16 text-[#7a7a7a]"><p className="text-3xl mb-2">🔍</p><p className="text-sm font-medium">No products found</p></div>
+                  <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                    {searchQuery || categoryFilter !== 'All' || stockFilter !== 'all' ? (
+                      <>
+                        <div className="w-16 h-16 rounded-full bg-[#f5f1ec] flex items-center justify-center mb-4">
+                          <Search className="w-7 h-7 text-[#d4a574]" />
+                        </div>
+                        <p className="text-sm font-semibold text-[#2d2d2d] mb-1">No matching products</p>
+                        <p className="text-xs text-[#7a7a7a] mb-4">Try adjusting your search or filters</p>
+                        <button onClick={() => { setSearchQuery(''); setCategoryFilter('All'); setStockFilter('all'); }} className="px-4 py-2 bg-white border border-[#e8e4df] text-xs font-semibold rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors">Clear all filters</button>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-16 h-16 rounded-full bg-[#f5f1ec] flex items-center justify-center mb-4">
+                          <Package className="w-7 h-7 text-[#d4a574]" />
+                        </div>
+                        <p className="text-sm font-semibold text-[#2d2d2d] mb-1">No products yet</p>
+                        <p className="text-xs text-[#7a7a7a] mb-4">Add your first product to get started</p>
+                        <button onClick={() => openEdit(null)} className="px-4 py-2 bg-[#d4a574] text-white text-xs font-semibold rounded-full hover:bg-[#c49464] transition-colors">Add Product</button>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
 
@@ -577,16 +659,25 @@ export default function AdminCommandCenter({
                         <div className="bg-[#faf8f5] rounded-xl p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">SKU</p><p className="text-sm font-semibold">{selectedProduct.sku || '—'}</p></div>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}>{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)} {stockLabel(selectedProduct.stockStatus)}</span>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}><span className={`w-2 h-2 rounded-full ${stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}`} /> {stockLabel(selectedProduct.stockStatus)}</span>
                         {selectedProduct.featured && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#d4a574] text-white"><Star className="w-3 h-3 fill-white" /> Featured</span>}
-                        {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100"><AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left</span>}
+                        {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-100"><AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left</span>}
                       </div>
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-[#faf8f5] rounded-xl p-3 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Stock</p><p className="text-sm font-bold">{stockLabel(selectedProduct.stockStatus)}</p><span className="text-xl mt-0.5 block">{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}</span></div>
-                        <div className="bg-[#faf8f5] rounded-xl p-3 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Qty</p><p className={`text-2xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-red-500' : 'text-[#2d2d2d]'}`}>{selectedProduct.stockQuantity}</p></div>
+                        <div className="bg-[#faf8f5] rounded-xl p-3 text-center">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Stock</p>
+                          <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                            <span className={`w-2.5 h-2.5 rounded-full ${stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}`} />
+                            <p className="text-sm font-bold">{stockLabel(selectedProduct.stockStatus)}</p>
+                          </div>
+                        </div>
+                        <div className="bg-[#faf8f5] rounded-xl p-3 text-center">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Qty</p>
+                          <p className={`text-2xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-orange-500' : 'text-[#2d2d2d]'}`}>{selectedProduct.stockQuantity}</p>
+                        </div>
                       </div>
                       {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
-                        <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" /><div><p className="text-xs font-semibold text-red-600">Low Stock</p><p className="text-[10px] text-red-500 mt-0.5">Only {selectedProduct.stockQuantity} left</p></div></div>
+                        <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" /><div><p className="text-xs font-semibold text-orange-600">Low Stock</p><p className="text-[10px] text-orange-500 mt-0.5">Only {selectedProduct.stockQuantity} left</p></div></div>
                       )}
                       {selectedProduct.stockStatus === 'outofstock' && (
                         <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" /><div><p className="text-xs font-semibold text-red-600">Out of Stock</p><p className="text-[10px] text-red-500 mt-0.5">Unavailable for purchase</p></div></div>
@@ -629,9 +720,16 @@ export default function AdminCommandCenter({
                       <div>
                         <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-3">Stock Status</h3>
                         <div className="space-y-1">
-                          {([{ key: 'all', label: 'All Stock', dot: '⚪' },{ key: 'instock', label: 'In Stock', dot: '🟢' },{ key: 'lowstock', label: 'Low Stock', dot: '🟠' },{ key: 'outofstock', label: 'Out of Stock', dot: '🔴' },{ key: 'preorder', label: 'Pre-Order', dot: '🟡' }] as { key: StockFilter; label: string; dot: string }[]).map((f) => (
-                            <button key={f.key} onClick={() => setStockFilter(f.key)} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${stockFilter === f.key ? 'bg-[#f5f1ec] text-[#d4a574] font-semibold' : 'hover:bg-[#f5f1ec]/50 text-[#2d2d2d]'}`}>
-                              <span>{f.dot}</span><span>{f.label}</span>
+                          {([
+                            { key: 'all' as StockFilter, label: 'All Stock', dotClass: 'bg-[#7a7a7a]' },
+                            { key: 'instock' as StockFilter, label: 'In Stock', dotClass: 'bg-emerald-500' },
+                            { key: 'lowstock' as StockFilter, label: 'Low Stock', dotClass: 'bg-orange-400' },
+                            { key: 'outofstock' as StockFilter, label: 'Out of Stock', dotClass: 'bg-red-500' },
+                            { key: 'preorder' as StockFilter, label: 'Pre-Order', dotClass: 'bg-amber-400' },
+                          ]).map((f) => (
+                            <button key={f.key} onClick={() => setStockFilter(f.key)} className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${stockFilter === f.key ? 'bg-[#f5f1ec] text-[#d4a574] font-semibold' : 'hover:bg-[#f5f1ec]/50 text-[#2d2d2d]'}`}>
+                              <span className={`w-2.5 h-2.5 rounded-full ${f.dotClass}`} />
+                              <span>{f.label}</span>
                             </button>
                           ))}
                         </div>
