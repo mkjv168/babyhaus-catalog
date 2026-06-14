@@ -6,7 +6,7 @@ import Image from 'next/image';
 import {
   Package, ShoppingBag, ImageIcon, FileSpreadsheet,
   Search, ChevronRight, Edit3, Trash2, Plus,
-  Check, X, AlertTriangle, Star
+  Check, X, AlertTriangle, Star, Filter
 } from 'lucide-react';
 import AdminBannerSection from '@/components/AdminBannerSection';
 import ImportModal from '@/app/admin/products/ImportModal';
@@ -123,6 +123,10 @@ export default function AdminCommandCenter({
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
 
+  // ─ Mobile overlays
+  const [showMobileInspector, setShowMobileInspector] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+
   // ─ Derived
   const selectedProduct = useMemo(
     () => products.find((p) => p.id === selectedProductId) || null,
@@ -182,6 +186,9 @@ export default function AdminCommandCenter({
   // ─ Handlers
   const handleSelectProduct = (id: string) => {
     setSelectedProductId(id);
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setShowMobileInspector(true);
+    }
   };
 
   const toggleSelect = (id: string) => {
@@ -318,385 +325,284 @@ export default function AdminCommandCenter({
             PRODUCTS TAB — Three-Column Command Center
            ═══════════════════════════════════════════════════════════ */}
         {activeTab === 'products' && (
-          <div className="h-full flex">
-            {/* ── Column 1: Category & Filter Hub (20%) ── */}
-            <aside className="w-[240px] min-w-[200px] bg-white border-r border-[#e8e4df] flex flex-col">
-              <div className="p-4 border-b border-[#e8e4df]">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7a7a7a]" />
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 bg-[#faf8f5] border border-[#e8e4df] rounded-lg text-sm text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                {/* Categories */}
-                <div>
-                  <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-3">
-                    Categories
-                  </h3>
-                  <div className="space-y-1">
-                    <button
-                      onClick={() => setCategoryFilter('All')}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                        categoryFilter === 'All'
-                          ? 'bg-[#d4a574] text-white'
-                          : 'hover:bg-[#f5f1ec] text-[#2d2d2d]'
-                      }`}
-                    >
-                      <span className="font-medium">All Products</span>
-                      <span className={`text-xs font-semibold ${categoryFilter === 'All' ? 'text-white/80' : 'text-[#7a7a7a]'}`}>
-                        {products.length}
-                      </span>
-                    </button>
-                    {categories.map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => setCategoryFilter(cat)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${
-                          categoryFilter === cat
-                            ? 'bg-[#d4a574] text-white'
-                            : 'hover:bg-[#f5f1ec] text-[#2d2d2d]'
-                        }`}
-                      >
-                        <span className="font-medium truncate">{cat}</span>
-                        <span className={`text-xs font-semibold ${categoryFilter === cat ? 'text-white/80' : 'text-[#7a7a7a]'}`}>
-                          {categoryCounts[cat] || 0}
-                        </span>
-                      </button>
-                    ))}
+          <>
+            {/* ═══════════════════════════════════════════════════════════
+                DESKTOP — Three-Column Command Center
+               ═══════════════════════════════════════════════════════════ */}
+            <div className="h-full hidden md:flex">
+              {/* ── Column 1: Category & Filter Hub ── */}
+              <aside className="w-[240px] min-w-[200px] bg-white border-r border-[#e8e4df] flex flex-col">
+                <div className="p-4 border-b border-[#e8e4df]">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7a7a7a]" />
+                    <input
+                      type="text"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-8 pr-3 py-2 bg-[#faf8f5] border border-[#e8e4df] rounded-lg text-sm text-[#2d2d2d] focus:border-[#d4a574] focus:ring-2 focus:ring-[#d4a574]/20 focus:outline-none transition-all"
+                    />
                   </div>
                 </div>
-
-                {/* Stock Filters */}
-                <div>
-                  <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-3">
-                    Stock Status
-                  </h3>
-                  <div className="space-y-1">
-                    {([
-                      { key: 'all', label: 'All Stock', dot: '⚪' },
-                      { key: 'instock', label: 'In Stock', dot: '🟢' },
-                      { key: 'lowstock', label: 'Low Stock', dot: '🟠' },
-                      { key: 'outofstock', label: 'Out of Stock', dot: '🔴' },
-                      { key: 'preorder', label: 'Pre-Order', dot: '🟡' },
-                    ] as { key: StockFilter; label: string; dot: string }[]).map((f) => (
-                      <button
-                        key={f.key}
-                        onClick={() => setStockFilter(f.key)}
-                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-                          stockFilter === f.key
-                            ? 'bg-[#f5f1ec] text-[#d4a574] font-semibold'
-                            : 'hover:bg-[#f5f1ec]/50 text-[#2d2d2d]'
-                        }`}
-                      >
-                        <span>{f.dot}</span>
-                        <span>{f.label}</span>
+                <div className="flex-1 overflow-y-auto p-4 space-y-6">
+                  <div>
+                    <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-3">Categories</h3>
+                    <div className="space-y-1">
+                      <button onClick={() => setCategoryFilter('All')} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${categoryFilter === 'All' ? 'bg-[#d4a574] text-white' : 'hover:bg-[#f5f1ec] text-[#2d2d2d]'}`}>
+                        <span className="font-medium">All Products</span>
+                        <span className={`text-xs font-semibold ${categoryFilter === 'All' ? 'text-white/80' : 'text-[#7a7a7a]'}`}>{products.length}</span>
                       </button>
-                    ))}
+                      {categories.map((cat) => (
+                        <button key={cat} onClick={() => setCategoryFilter(cat)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${categoryFilter === cat ? 'bg-[#d4a574] text-white' : 'hover:bg-[#f5f1ec] text-[#2d2d2d]'}`}>
+                          <span className="font-medium truncate">{cat}</span>
+                          <span className={`text-xs font-semibold ${categoryFilter === cat ? 'text-white/80' : 'text-[#7a7a7a]'}`}>{categoryCounts[cat] || 0}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-3">Stock Status</h3>
+                    <div className="space-y-1">
+                      {([{ key: 'all', label: 'All Stock', dot: '⚪' },{ key: 'instock', label: 'In Stock', dot: '🟢' },{ key: 'lowstock', label: 'Low Stock', dot: '🟠' },{ key: 'outofstock', label: 'Out of Stock', dot: '🔴' },{ key: 'preorder', label: 'Pre-Order', dot: '🟡' }] as { key: StockFilter; label: string; dot: string }[]).map((f) => (
+                        <button key={f.key} onClick={() => setStockFilter(f.key)} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${stockFilter === f.key ? 'bg-[#f5f1ec] text-[#d4a574] font-semibold' : 'hover:bg-[#f5f1ec]/50 text-[#2d2d2d]'}`}>
+                          <span>{f.dot}</span><span>{f.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </aside>
+              </aside>
 
-            {/* ── Column 2: Product Stream (35%) ── */}
-            <div className="w-[380px] min-w-[320px] bg-[#faf8f5] border-r border-[#e8e4df] flex flex-col">
-              {/* Toolbar */}
-              <div className="px-4 py-3 border-b border-[#e8e4df] bg-white flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-bold">{filteredProducts.length} products</p>
-                  {selectedIds.size > 0 && (
-                    <p className="text-xs text-[#d4a574] font-medium">{selectedIds.size} selected</p>
+              {/* ── Column 2: Product Stream ── */}
+              <div className="w-[380px] min-w-[320px] bg-[#faf8f5] border-r border-[#e8e4df] flex flex-col">
+                <div className="px-4 py-3 border-b border-[#e8e4df] bg-white flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold">{filteredProducts.length} products</p>
+                    {selectedIds.size > 0 && <p className="text-xs text-[#d4a574] font-medium">{selectedIds.size} selected</p>}
+                  </div>
+                  <button onClick={() => openEdit(null)} className="flex items-center gap-1 px-3 py-1.5 bg-[#d4a574] text-white text-xs font-semibold rounded-full hover:bg-[#c49464] transition-colors"><Plus className="w-3.5 h-3.5" />Add</button>
+                </div>
+                {selectedIds.size > 0 && (
+                  <div className="px-4 py-2 bg-[#f5f1ec] border-b border-[#e8e4df] flex items-center gap-2">
+                    <button onClick={() => handleBulkFeature(true)} disabled={bulkLoading} className="px-2.5 py-1 text-[10px] font-semibold bg-white border border-[#e8e4df] rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors disabled:opacity-50">Feature</button>
+                    <button onClick={() => handleBulkFeature(false)} disabled={bulkLoading} className="px-2.5 py-1 text-[10px] font-semibold bg-white border border-[#e8e4df] rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors disabled:opacity-50">Unfeature</button>
+                    <button onClick={handleBulkDelete} disabled={bulkLoading} className="px-2.5 py-1 text-[10px] font-semibold bg-red-50 text-red-500 border border-red-100 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50">Delete</button>
+                    <div className="flex-1" />
+                    <button onClick={() => setSelectedIds(new Set())} className="p-1 hover:bg-[#e8e4df] rounded transition-colors"><X className="w-3.5 h-3.5 text-[#7a7a7a]" /></button>
+                  </div>
+                )}
+                <div className="flex-1 overflow-y-auto">
+                  {filteredProducts.map((p) => (
+                    <div key={p.id} onClick={() => handleSelectProduct(p.id)} className={`group flex items-center gap-3 px-4 py-3 border-b border-[#e8e4df]/60 cursor-pointer transition-all ${selectedProductId === p.id ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}>
+                      <input type="checkbox" checked={selectedIds.has(p.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(p.id); }} className="w-4 h-4 accent-[#d4a574] rounded shrink-0" />
+                      <div className="w-10 h-10 relative bg-[#f5f1ec] rounded-lg overflow-hidden shrink-0">{p.imageUrl ? <Image src={p.imageUrl} alt={p.name} fill className="object-cover" /> : <span className="text-sm flex items-center justify-center h-full">👶</span>}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2"><p className="text-sm font-semibold truncate">{p.name}</p>{p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}</div>
+                        <div className="flex items-center gap-2 mt-0.5"><span className="text-[10px] text-[#7a7a7a]">{p.category}</span><span className="text-[10px] text-[#d4a574] font-medium">{formatPrice(p.price)}</span></div>
+                      </div>
+                      <div className="text-right shrink-0"><span className="text-base" title={`${stockLabel(p.stockStatus)}${p.stockQuantity > 0 && p.stockQuantity <= 5 ? ` (${p.stockQuantity} left)` : ''}`}>{stockDot(p.stockStatus, p.stockQuantity)}</span></div>
+                      <ChevronRight className={`w-4 h-4 text-[#7a7a7a] shrink-0 transition-opacity ${selectedProductId === p.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} />
+                    </div>
+                  ))}
+                  {filteredProducts.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-16 text-[#7a7a7a]"><p className="text-3xl mb-2">🔍</p><p className="text-sm font-medium">No products found</p></div>
                   )}
                 </div>
-                <button
-                  onClick={() => openEdit(null)}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-[#d4a574] text-white text-xs font-semibold rounded-full hover:bg-[#c49464] transition-colors"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  Add
+              </div>
+
+              {/* ── Column 3: Product Inspector ── */}
+              <div className="flex-1 bg-white flex flex-col min-w-0">
+                {selectedProduct ? (
+                  <>
+                    <div className="px-6 py-4 border-b border-[#e8e4df] flex items-center justify-between">
+                      <div><h2 className="text-lg font-bold">{selectedProduct.name}</h2><p className="text-xs text-[#7a7a7a]">{selectedProduct.category}{selectedProduct.brand ? ` • ${selectedProduct.brand}` : ''}</p></div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => openEdit(selectedProduct)} className="flex items-center gap-1.5 px-4 py-2 bg-[#d4a574] text-white text-sm font-semibold rounded-full hover:bg-[#c49464] transition-colors"><Edit3 className="w-3.5 h-3.5" />Edit</button>
+                        <button onClick={() => { if (confirm('Delete this product?')) { fetch(`/api/products/${selectedProduct.id}`, { method: 'DELETE' }).then(() => { setSelectedProductId(null); router.refresh(); }); } }} className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                      <div>
+                        {(() => { const imgs = allProductImages(selectedProduct); return imgs.length > 0 ? (
+                          <div className="space-y-3">
+                            <div className="relative aspect-[16/9] max-h-[180px] bg-[#f5f1ec] rounded-2xl overflow-hidden"><Image src={imgs[0]} alt={selectedProduct.name} fill className="object-cover" /></div>
+                            {imgs.length > 1 && <div className="flex gap-2">{imgs.map((url, i) => (<div key={i} className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${i === 0 ? 'border-[#d4a574]' : 'border-transparent'}`}><Image src={url} alt="" fill className="object-cover" /></div>))}</div>}
+                            <p className="text-xs text-[#7a7a7a]">{imgs.length} image{imgs.length !== 1 ? 's' : ''}</p>
+                          </div>
+                        ) : (<div className="flex flex-col items-center justify-center py-8 text-[#7a7a7a] bg-[#faf8f5] rounded-xl"><p className="text-3xl mb-2">👶</p><p className="text-sm font-medium">No images</p></div>); })()}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-[#faf8f5] rounded-xl p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Price</p><p className="text-2xl font-bold text-[#d4a574]">{formatPrice(selectedProduct.price)}</p></div>
+                        <div className="bg-[#faf8f5] rounded-xl p-4"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">SKU</p><p className="text-lg font-semibold">{selectedProduct.sku || '—'}</p></div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}>{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)} {stockLabel(selectedProduct.stockStatus)}</span>
+                        {selectedProduct.featured && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#d4a574] text-white"><Star className="w-3 h-3 fill-white" /> Featured</span>}
+                        {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100"><AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left</span>}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-[#faf8f5] rounded-xl p-4 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Stock Status</p><p className="text-lg font-bold">{stockLabel(selectedProduct.stockStatus)}</p><span className="text-2xl mt-1 block">{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}</span></div>
+                        <div className="bg-[#faf8f5] rounded-xl p-4 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Quantity</p><p className={`text-3xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-red-500' : 'text-[#2d2d2d]'}`}>{selectedProduct.stockQuantity}</p><p className="text-xs text-[#7a7a7a] mt-1">units</p></div>
+                      </div>
+                      {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
+                        <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3"><AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /><div><p className="text-sm font-semibold text-red-600">Low Stock Warning</p><p className="text-xs text-red-500 mt-1">Only {selectedProduct.stockQuantity} units remaining. Consider restocking soon.</p></div></div>
+                      )}
+                      {selectedProduct.stockStatus === 'outofstock' && (
+                        <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3"><AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" /><div><p className="text-sm font-semibold text-red-600">Out of Stock</p><p className="text-xs text-red-500 mt-1">This product is currently unavailable for purchase.</p></div></div>
+                      )}
+                      <div><h4 className="text-sm font-bold mb-2">Description</h4><p className="text-sm text-[#7a7a7a] leading-relaxed bg-[#faf8f5] rounded-xl p-4">{selectedProduct.description || 'No description provided.'}</p></div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Brand</p><p className="font-medium">{selectedProduct.brand || '—'}</p></div>
+                        <div><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Category</p><p className="font-medium">{selectedProduct.category}</p></div>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex flex-col items-center justify-center text-[#7a7a7a]"><Package className="w-16 h-16 mb-4 opacity-20" /><p className="text-lg font-semibold">Select a product</p><p className="text-sm mt-1">Choose a product from the list to view details</p></div>
+                )}
+              </div>
+            </div>
+
+            {/* ═══════════════════════════════════════════════════════════
+                MOBILE — Single Column + Bottom Sheets
+               ═══════════════════════════════════════════════════════════ */}
+            <div className="h-full flex flex-col md:hidden bg-[#faf8f5]">
+              {/* Mobile toolbar */}
+              <div className="px-4 py-3 bg-white border-b border-[#e8e4df] flex items-center gap-2">
+                <button onClick={() => setShowMobileFilters(true)} className="flex items-center gap-1 px-3 py-2 bg-[#f5f1ec] text-[#2d2d2d] text-xs font-semibold rounded-full hover:bg-[#e8e4df] transition-colors">
+                  <Filter className="w-3.5 h-3.5" /> Filters
                 </button>
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7a7a7a]" />
+                  <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-8 pr-3 py-2 bg-[#faf8f5] border border-[#e8e4df] rounded-lg text-sm text-[#2d2d2d] focus:border-[#d4a574] focus:outline-none transition-all" />
+                </div>
+                <button onClick={() => openEdit(null)} className="flex items-center gap-1 px-3 py-2 bg-[#d4a574] text-white text-xs font-semibold rounded-full hover:bg-[#c49464] transition-colors"><Plus className="w-3.5 h-3.5" /></button>
               </div>
 
               {/* Bulk actions */}
               {selectedIds.size > 0 && (
                 <div className="px-4 py-2 bg-[#f5f1ec] border-b border-[#e8e4df] flex items-center gap-2">
-                  <button
-                    onClick={() => handleBulkFeature(true)}
-                    disabled={bulkLoading}
-                    className="px-2.5 py-1 text-[10px] font-semibold bg-white border border-[#e8e4df] rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors disabled:opacity-50"
-                  >
-                    Feature
-                  </button>
-                  <button
-                    onClick={() => handleBulkFeature(false)}
-                    disabled={bulkLoading}
-                    className="px-2.5 py-1 text-[10px] font-semibold bg-white border border-[#e8e4df] rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors disabled:opacity-50"
-                  >
-                    Unfeature
-                  </button>
-                  <button
-                    onClick={handleBulkDelete}
-                    disabled={bulkLoading}
-                    className="px-2.5 py-1 text-[10px] font-semibold bg-red-50 text-red-500 border border-red-100 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50"
-                  >
-                    Delete
-                  </button>
+                  <button onClick={() => handleBulkFeature(true)} disabled={bulkLoading} className="px-2.5 py-1 text-[10px] font-semibold bg-white border border-[#e8e4df] rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors disabled:opacity-50">Feature</button>
+                  <button onClick={() => handleBulkFeature(false)} disabled={bulkLoading} className="px-2.5 py-1 text-[10px] font-semibold bg-white border border-[#e8e4df] rounded-full hover:border-[#d4a574] hover:text-[#d4a574] transition-colors disabled:opacity-50">Unfeature</button>
+                  <button onClick={handleBulkDelete} disabled={bulkLoading} className="px-2.5 py-1 text-[10px] font-semibold bg-red-50 text-red-500 border border-red-100 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50">Delete</button>
                   <div className="flex-1" />
-                  <button
-                    onClick={() => setSelectedIds(new Set())}
-                    className="p-1 hover:bg-[#e8e4df] rounded transition-colors"
-                  >
-                    <X className="w-3.5 h-3.5 text-[#7a7a7a]" />
-                  </button>
+                  <button onClick={() => setSelectedIds(new Set())} className="p-1 hover:bg-[#e8e4df] rounded transition-colors"><X className="w-3.5 h-3.5 text-[#7a7a7a]" /></button>
                 </div>
               )}
 
-              {/* Product list */}
+              {/* Mobile product list */}
               <div className="flex-1 overflow-y-auto">
+                <p className="px-4 py-2 text-xs font-semibold text-[#7a7a7a]">{filteredProducts.length} products</p>
                 {filteredProducts.map((p) => (
-                  <div
-                    key={p.id}
-                    onClick={() => handleSelectProduct(p.id)}
-                    className={`group flex items-center gap-3 px-4 py-3 border-b border-[#e8e4df]/60 cursor-pointer transition-all ${
-                      selectedProductId === p.id
-                        ? 'bg-white shadow-sm'
-                        : 'hover:bg-white/50'
-                    }`}
-                  >
-                    {/* Checkbox */}
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.has(p.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        toggleSelect(p.id);
-                      }}
-                      className="w-4 h-4 accent-[#d4a574] rounded shrink-0"
-                    />
-
-                    {/* Thumbnail */}
-                    <div className="w-10 h-10 relative bg-[#f5f1ec] rounded-lg overflow-hidden shrink-0">
-                      {p.imageUrl ? (
-                        <Image src={p.imageUrl} alt={p.name} fill className="object-cover" />
-                      ) : (
-                        <span className="text-sm flex items-center justify-center h-full">👶</span>
-                      )}
-                    </div>
-
-                    {/* Info */}
+                  <div key={p.id} onClick={() => handleSelectProduct(p.id)} className={`group flex items-center gap-3 px-4 py-3 border-b border-[#e8e4df]/60 cursor-pointer transition-all ${selectedProductId === p.id ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}>
+                    <input type="checkbox" checked={selectedIds.has(p.id)} onChange={(e) => { e.stopPropagation(); toggleSelect(p.id); }} className="w-4 h-4 accent-[#d4a574] rounded shrink-0" />
+                    <div className="w-10 h-10 relative bg-[#f5f1ec] rounded-lg overflow-hidden shrink-0">{p.imageUrl ? <Image src={p.imageUrl} alt={p.name} fill className="object-cover" /> : <span className="text-sm flex items-center justify-center h-full">👶</span>}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold truncate">{p.name}</p>
-                        {p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] text-[#7a7a7a]">{p.category}</span>
-                        <span className="text-[10px] text-[#d4a574] font-medium">{formatPrice(p.price)}</span>
-                      </div>
+                      <div className="flex items-center gap-2"><p className="text-sm font-semibold truncate">{p.name}</p>{p.featured && <Star className="w-3 h-3 text-[#d4a574] fill-[#d4a574] shrink-0" />}</div>
+                      <div className="flex items-center gap-2 mt-0.5"><span className="text-[10px] text-[#7a7a7a]">{p.category}</span><span className="text-[10px] text-[#d4a574] font-medium">{formatPrice(p.price)}</span></div>
                     </div>
-
-                    {/* Stock dot */}
-                    <div className="text-right shrink-0">
-                      <span className="text-base" title={`${stockLabel(p.stockStatus)}${p.stockQuantity > 0 && p.stockQuantity <= 5 ? ` (${p.stockQuantity} left)` : ''}`}>
-                        {stockDot(p.stockStatus, p.stockQuantity)}
-                      </span>
-                    </div>
-
-                    <ChevronRight className={`w-4 h-4 text-[#7a7a7a] shrink-0 transition-opacity ${selectedProductId === p.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`} />
+                    <div className="text-right shrink-0"><span className="text-base" title={`${stockLabel(p.stockStatus)}${p.stockQuantity > 0 && p.stockQuantity <= 5 ? ` (${p.stockQuantity} left)` : ''}`}>{stockDot(p.stockStatus, p.stockQuantity)}</span></div>
+                    <ChevronRight className="w-4 h-4 text-[#7a7a7a] shrink-0" />
                   </div>
                 ))}
                 {filteredProducts.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-16 text-[#7a7a7a]">
-                    <p className="text-3xl mb-2">🔍</p>
-                    <p className="text-sm font-medium">No products found</p>
-                  </div>
+                  <div className="flex flex-col items-center justify-center py-16 text-[#7a7a7a]"><p className="text-3xl mb-2">🔍</p><p className="text-sm font-medium">No products found</p></div>
                 )}
               </div>
-            </div>
 
-            {/* ── Column 3: Product Inspector (flex-1) ── */}
-            <div className="flex-1 bg-white flex flex-col min-w-0">
-              {selectedProduct ? (
-                <>
-                  {/* Inspector header */}
-                  <div className="px-6 py-4 border-b border-[#e8e4df] flex items-center justify-between">
-                    <div>
-                      <h2 className="text-lg font-bold">{selectedProduct.name}</h2>
-                      <p className="text-xs text-[#7a7a7a]">{selectedProduct.category}{selectedProduct.brand ? ` • ${selectedProduct.brand}` : ''}</p>
+              {/* Mobile Inspector Bottom Sheet */}
+              {showMobileInspector && selectedProduct && (
+                <div className="fixed inset-0 z-50">
+                  <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowMobileInspector(false)} />
+                  <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom">
+                    <div className="sticky top-0 bg-white border-b border-[#e8e4df] px-4 py-3 flex items-center justify-between z-10">
+                      <div><h2 className="text-base font-bold">{selectedProduct.name}</h2><p className="text-xs text-[#7a7a7a]">{selectedProduct.category}{selectedProduct.brand ? ` • ${selectedProduct.brand}` : ''}</p></div>
+                      <button onClick={() => setShowMobileInspector(false)} className="p-2 rounded-full hover:bg-[#f5f1ec] transition-colors"><X className="w-5 h-5 text-[#7a7a7a]" /></button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => openEdit(selectedProduct)}
-                        className="flex items-center gap-1.5 px-4 py-2 bg-[#d4a574] text-white text-sm font-semibold rounded-full hover:bg-[#c49464] transition-colors"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          if (confirm('Delete this product?')) {
-                            fetch(`/api/products/${selectedProduct.id}`, { method: 'DELETE' }).then(() => {
-                              setSelectedProductId(null);
-                              router.refresh();
-                            });
-                          }
-                        }}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Inspector content — single scrollable view */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                    {/* Images Section */}
-                    <div>
-                      {(() => {
-                        const imgs = allProductImages(selectedProduct);
-                        return imgs.length > 0 ? (
-                            <div className="space-y-3">
-                              <div className="relative aspect-[16/9] max-h-[180px] bg-[#f5f1ec] rounded-2xl overflow-hidden">
-                                <Image
-                                  src={imgs[0]}
-                                  alt={selectedProduct.name}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                              {imgs.length > 1 && (
-                                <div className="flex gap-2">
-                                  {imgs.map((url, i) => (
-                                    <div
-                                      key={i}
-                                      className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${
-                                        i === 0 ? 'border-[#d4a574]' : 'border-transparent'
-                                      }`}
-                                    >
-                                      <Image src={url} alt="" fill className="object-cover" />
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                              <p className="text-xs text-[#7a7a7a]">{imgs.length} image{imgs.length !== 1 ? 's' : ''}</p>
-                            </div>
-                        ) : (
-                          <div className="flex flex-col items-center justify-center py-8 text-[#7a7a7a] bg-[#faf8f5] rounded-xl">
-                            <p className="text-3xl mb-2">👶</p>
-                            <p className="text-sm font-medium">No images</p>
+                    <div className="p-4 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => { setShowMobileInspector(false); openEdit(selectedProduct); }} className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-[#d4a574] text-white text-sm font-semibold rounded-full hover:bg-[#c49464] transition-colors"><Edit3 className="w-3.5 h-3.5" />Edit Product</button>
+                        <button onClick={() => { if (confirm('Delete this product?')) { fetch(`/api/products/${selectedProduct.id}`, { method: 'DELETE' }).then(() => { setSelectedProductId(null); setShowMobileInspector(false); router.refresh(); }); } }} className="p-2.5 text-red-500 hover:bg-red-50 rounded-full transition-colors border border-red-100"><Trash2 className="w-4 h-4" /></button>
+                      </div>
+                      <div>
+                        {(() => { const imgs = allProductImages(selectedProduct); return imgs.length > 0 ? (
+                          <div className="space-y-2">
+                            <div className="relative aspect-[16/9] max-h-[160px] bg-[#f5f1ec] rounded-xl overflow-hidden"><Image src={imgs[0]} alt={selectedProduct.name} fill className="object-cover" /></div>
+                            {imgs.length > 1 && <div className="flex gap-2">{imgs.map((url, i) => (<div key={i} className={`relative w-10 h-10 rounded-lg overflow-hidden border-2 transition-colors ${i === 0 ? 'border-[#d4a574]' : 'border-transparent'}`}><Image src={url} alt="" fill className="object-cover" /></div>))}</div>}
                           </div>
-                        );
-                      })()}
-                    </div>
-
-                    {/* Price & SKU row */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-[#faf8f5] rounded-xl p-4">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Price</p>
-                        <p className="text-2xl font-bold text-[#d4a574]">{formatPrice(selectedProduct.price)}</p>
+                        ) : (<div className="flex flex-col items-center justify-center py-6 text-[#7a7a7a] bg-[#faf8f5] rounded-xl"><p className="text-2xl mb-1">👶</p><p className="text-xs font-medium">No images</p></div>); })()}
                       </div>
-                      <div className="bg-[#faf8f5] rounded-xl p-4">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">SKU</p>
-                        <p className="text-lg font-semibold">{selectedProduct.sku || '—'}</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-[#faf8f5] rounded-xl p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Price</p><p className="text-xl font-bold text-[#d4a574]">{formatPrice(selectedProduct.price)}</p></div>
+                        <div className="bg-[#faf8f5] rounded-xl p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">SKU</p><p className="text-sm font-semibold">{selectedProduct.sku || '—'}</p></div>
                       </div>
-                    </div>
-
-                    {/* Status badges */}
-                    <div className="flex flex-wrap gap-2">
-                      <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}>
-                        {stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)} {stockLabel(selectedProduct.stockStatus)}
-                      </span>
-                      {selectedProduct.featured && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#d4a574] text-white">
-                          <Star className="w-3 h-3 fill-white" /> Featured
-                        </span>
-                      )}
+                      <div className="flex flex-wrap gap-2">
+                        <span className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border ${stockBadgeClass(selectedProduct.stockStatus)}`}>{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)} {stockLabel(selectedProduct.stockStatus)}</span>
+                        {selectedProduct.featured && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#d4a574] text-white"><Star className="w-3 h-3 fill-white" /> Featured</span>}
+                        {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100"><AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left</span>}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-[#faf8f5] rounded-xl p-3 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Stock</p><p className="text-sm font-bold">{stockLabel(selectedProduct.stockStatus)}</p><span className="text-xl mt-0.5 block">{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}</span></div>
+                        <div className="bg-[#faf8f5] rounded-xl p-3 text-center"><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Qty</p><p className={`text-2xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-red-500' : 'text-[#2d2d2d]'}`}>{selectedProduct.stockQuantity}</p></div>
+                      </div>
                       {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-100">
-                          <AlertTriangle className="w-3 h-3" /> Only {selectedProduct.stockQuantity} left
-                        </span>
+                        <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" /><div><p className="text-xs font-semibold text-red-600">Low Stock</p><p className="text-[10px] text-red-500 mt-0.5">Only {selectedProduct.stockQuantity} left</p></div></div>
                       )}
-                    </div>
-
-                    {/* Inventory mini-cards */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-[#faf8f5] rounded-xl p-4 text-center">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Stock Status</p>
-                        <p className="text-lg font-bold">{stockLabel(selectedProduct.stockStatus)}</p>
-                        <span className="text-2xl mt-1 block">{stockDot(selectedProduct.stockStatus, selectedProduct.stockQuantity)}</span>
-                      </div>
-                      <div className="bg-[#faf8f5] rounded-xl p-4 text-center">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-2">Quantity</p>
-                        <p className={`text-3xl font-bold ${selectedProduct.stockQuantity <= 5 && selectedProduct.stockQuantity > 0 ? 'text-red-500' : 'text-[#2d2d2d]'}`}>
-                          {selectedProduct.stockQuantity}
-                        </p>
-                        <p className="text-xs text-[#7a7a7a] mt-1">units</p>
-                      </div>
-                    </div>
-
-                    {/* Warnings */}
-                    {selectedProduct.stockQuantity > 0 && selectedProduct.stockQuantity <= 5 && selectedProduct.stockStatus === 'instock' && (
-                      <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-semibold text-red-600">Low Stock Warning</p>
-                          <p className="text-xs text-red-500 mt-1">
-                            Only {selectedProduct.stockQuantity} units remaining. Consider restocking soon.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {selectedProduct.stockStatus === 'outofstock' && (
-                      <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-sm font-semibold text-red-600">Out of Stock</p>
-                          <p className="text-xs text-red-500 mt-1">
-                            This product is currently unavailable for purchase.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Description */}
-                    <div>
-                      <h4 className="text-sm font-bold mb-2">Description</h4>
-                      <p className="text-sm text-[#7a7a7a] leading-relaxed bg-[#faf8f5] rounded-xl p-4">
-                        {selectedProduct.description || 'No description provided.'}
-                      </p>
-                    </div>
-
-                    {/* Meta */}
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Brand</p>
-                        <p className="font-medium">{selectedProduct.brand || '—'}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-1">Category</p>
-                        <p className="font-medium">{selectedProduct.category}</p>
+                      {selectedProduct.stockStatus === 'outofstock' && (
+                        <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-start gap-2"><AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" /><div><p className="text-xs font-semibold text-red-600">Out of Stock</p><p className="text-[10px] text-red-500 mt-0.5">Unavailable for purchase</p></div></div>
+                      )}
+                      <div><h4 className="text-xs font-bold mb-1">Description</h4><p className="text-xs text-[#7a7a7a] leading-relaxed bg-[#faf8f5] rounded-xl p-3">{selectedProduct.description || 'No description provided.'}</p></div>
+                      <div className="grid grid-cols-2 gap-3 text-xs">
+                        <div><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-0.5">Brand</p><p className="font-medium">{selectedProduct.brand || '—'}</p></div>
+                        <div><p className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-0.5">Category</p><p className="font-medium">{selectedProduct.category}</p></div>
                       </div>
                     </div>
                   </div>
-                </>
-              ) : (
-                /* Empty state */
-                <div className="flex-1 flex flex-col items-center justify-center text-[#7a7a7a]">
-                  <Package className="w-16 h-16 mb-4 opacity-20" />
-                  <p className="text-lg font-semibold">Select a product</p>
-                  <p className="text-sm mt-1">Choose a product from the list to view details</p>
+                </div>
+              )}
+
+              {/* Mobile Filter Bottom Sheet */}
+              {showMobileFilters && (
+                <div className="fixed inset-0 z-50">
+                  <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowMobileFilters(false)} />
+                  <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto">
+                    <div className="sticky top-0 bg-white border-b border-[#e8e4df] px-4 py-3 flex items-center justify-between z-10">
+                      <h2 className="text-base font-bold">Filters</h2>
+                      <button onClick={() => setShowMobileFilters(false)} className="p-2 rounded-full hover:bg-[#f5f1ec] transition-colors"><X className="w-5 h-5 text-[#7a7a7a]" /></button>
+                    </div>
+                    <div className="p-4 space-y-6">
+                      <div>
+                        <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-3">Categories</h3>
+                        <div className="space-y-1">
+                          <button onClick={() => setCategoryFilter('All')} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${categoryFilter === 'All' ? 'bg-[#d4a574] text-white' : 'hover:bg-[#f5f1ec] text-[#2d2d2d]'}`}>
+                            <span className="font-medium">All Products</span>
+                            <span className={`text-xs font-semibold ${categoryFilter === 'All' ? 'text-white/80' : 'text-[#7a7a7a]'}`}>{products.length}</span>
+                          </button>
+                          {categories.map((cat) => (
+                            <button key={cat} onClick={() => setCategoryFilter(cat)} className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${categoryFilter === cat ? 'bg-[#d4a574] text-white' : 'hover:bg-[#f5f1ec] text-[#2d2d2d]'}`}>
+                              <span className="font-medium truncate">{cat}</span>
+                              <span className={`text-xs font-semibold ${categoryFilter === cat ? 'text-white/80' : 'text-[#7a7a7a]'}`}>{categoryCounts[cat] || 0}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="text-[10px] font-bold uppercase tracking-wider text-[#7a7a7a] mb-3">Stock Status</h3>
+                        <div className="space-y-1">
+                          {([{ key: 'all', label: 'All Stock', dot: '⚪' },{ key: 'instock', label: 'In Stock', dot: '🟢' },{ key: 'lowstock', label: 'Low Stock', dot: '🟠' },{ key: 'outofstock', label: 'Out of Stock', dot: '🔴' },{ key: 'preorder', label: 'Pre-Order', dot: '🟡' }] as { key: StockFilter; label: string; dot: string }[]).map((f) => (
+                            <button key={f.key} onClick={() => setStockFilter(f.key)} className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${stockFilter === f.key ? 'bg-[#f5f1ec] text-[#d4a574] font-semibold' : 'hover:bg-[#f5f1ec]/50 text-[#2d2d2d]'}`}>
+                              <span>{f.dot}</span><span>{f.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
-          </div>
+          </>
         )}
-
         {/* ═══════════════════════════════════════════════════════════
             ORDERS TAB
            ═══════════════════════════════════════════════════════════ */}
