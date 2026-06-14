@@ -3,11 +3,21 @@ import { Suspense } from 'react';
 import { CatalogClient } from '@/components/CatalogClient';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import BannerCarousel from '@/components/BannerCarousel';
 
 export const revalidate = 60;
 
 export default async function Home() {
-  const products = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
+  const [products, banners] = await Promise.all([
+    prisma.product.findMany({ 
+      orderBy: { createdAt: 'desc' },
+      include: { images: { orderBy: { order: 'asc' } } }
+    }),
+    prisma.banner.findMany({
+      where: { active: true },
+      orderBy: { order: 'asc' }
+    })
+  ]);
   const categories = [...new Set(products.map((p) => p.category))].sort();
 
   return (
@@ -55,6 +65,13 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Banner Carousel */}
+      {banners.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <BannerCarousel banners={banners} />
+        </section>
+      )}
 
       {/* Catalog */}
       <section id="catalog" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-2">

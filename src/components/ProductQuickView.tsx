@@ -1,10 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ProductImage } from './ProductImage';
 import { AddToCartButton } from './AddToCartButton';
 import { ShareButton } from './ShareButton';
+
+interface ProductImageData {
+  id: string;
+  url: string;
+  order: number;
+}
 
 interface QuickViewProduct {
   id: string;
@@ -16,6 +22,7 @@ interface QuickViewProduct {
   imageUrl: string | null;
   sku: string | null;
   stockStatus: string;
+  images?: ProductImageData[];
 }
 
 interface ProductQuickViewProps {
@@ -25,6 +32,15 @@ interface ProductQuickViewProps {
 }
 
 export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+
+  // Reset image index when product changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [product?.id]);
+
   // Lock body scroll when open
   useEffect(() => {
     if (isOpen) {
@@ -36,6 +52,41 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
   }, [isOpen]);
 
   if (!isOpen || !product) return null;
+
+  // Get all images - combine legacy imageUrl with images array
+  const allImages: string[] = [];
+  if (product.imageUrl) allImages.push(product.imageUrl);
+  if (product.images && product.images.length > 0) {
+    product.images.forEach((img) => {
+      if (!allImages.includes(img.url)) {
+        allImages.push(img.url);
+      }
+    });
+  }
+
+  // Handle touch events for swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && currentImageIndex < allImages.length - 1) {
+      setCurrentImageIndex(currentImageIndex + 1);
+    }
+    if (isRightSwipe && currentImageIndex > 0) {
+      setCurrentImageIndex(currentImageIndex - 1);
+    }
+  };
 
   const stockLabel =
     product.stockStatus === 'instock'
@@ -84,13 +135,58 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-5 pb-6">
-          {/* Image */}
+          {/* Image Gallery */}
           <div className="aspect-square relative bg-[#FFF9F5] rounded-2xl overflow-hidden border border-[#F0E6DD] mb-4">
-            <ProductImage
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-full"
-            />
+            {allImages.length > 1 ? (
+              <>
+                {/* Scrollable images */}
+                <div 
+                  className="relative w-full h-full flex transition-transform duration-300 ease-out"
+                  style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                >
+                  {allImages.map((imageUrl, index) => (
+                    <div key={index} className="w-full h-full flex-shrink-0">
+                      <ProductImage
+                        src={imageUrl}
+                        alt={`${product.name} - Image ${index + 1}`}
+                        className="w-full h-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Image counter */}
+                <div className="absolute top-4 right-4 bg-black/50 text-white px-2 py-1 rounded-full text-xs font-medium">
+                  {currentImageIndex + 1} / {allImages.length}
+                </div>
+
+                {/* Dot indicators */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {allImages.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        index === currentImageIndex
+                          ? 'bg-white w-5'
+                          : 'bg-white/50 hover:bg-white/70'
+                      }`}
+                      aria-label={`Go to image ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              // Single image
+              <ProductImage
+                src={allImages[0] || null}
+                alt={product.name}
+                className="w-full h-full"
+              />
+            )}
           </div>
 
           {/* Info */}

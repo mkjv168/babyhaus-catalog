@@ -9,6 +9,12 @@ import { CompactProductCard } from './CompactProductCard';
 import { Pagination } from './Pagination';
 import { ProductQuickView } from './ProductQuickView';
 
+interface ProductImageData {
+  id: string;
+  url: string;
+  order: number;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -21,6 +27,7 @@ interface Product {
   stockStatus: string;
   featured: boolean;
   createdAt: Date;
+  images?: ProductImageData[];
 }
 
 interface CatalogClientProps {

@@ -3,12 +3,13 @@ import { getAdminUser } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import LogoutButton from './LogoutButton';
+import AdminBannerSection from '@/components/AdminBannerSection';
 
 export default async function AdminDashboard() {
   const user = await getAdminUser();
   if (!user) redirect('/admin/login');
 
-  const [productCount, orderCount, pendingOrders, lowStockProducts, recentOrders] = await Promise.all([
+  const [productCount, orderCount, pendingOrders, lowStockProducts, recentOrders, banners] = await Promise.all([
     prisma.product.count(),
     prisma.order.count(),
     prisma.order.count({ where: { status: 'pending' } }),
@@ -22,6 +23,9 @@ export default async function AdminDashboard() {
       orderBy: { createdAt: 'desc' },
       take: 5,
     }),
+    prisma.banner.findMany({
+      orderBy: { order: 'asc' }
+    })
   ]);
 
   return (
@@ -131,6 +135,11 @@ export default async function AdminDashboard() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Banner Management Section */}
+        <div className="mb-10">
+          <AdminBannerSection initialBanners={banners} />
         </div>
 
         <div className="flex flex-wrap gap-3">

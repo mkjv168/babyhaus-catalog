@@ -6,6 +6,12 @@ import { AddToCartButton } from './AddToCartButton';
 import { WishlistButton } from './WishlistButton';
 import { ShareButton } from './ShareButton';
 
+interface ProductImageData {
+  id: string;
+  url: string;
+  order: number;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -17,6 +23,7 @@ interface Product {
   sku?: string | null;
   stockStatus: string;
   featured: boolean;
+  images?: ProductImageData[];
 }
 
 interface CompactProductCardProps {
