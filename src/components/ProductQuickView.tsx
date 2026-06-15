@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ProductImage } from './ProductImage';
 import { AddToCartButton } from './AddToCartButton';
 import { ShareButton } from './ShareButton';
+import { ProductVariantSelector } from './ProductVariantSelector';
 
 interface ProductImageData {
   id: string;
@@ -53,9 +54,14 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [selectedVariantId, setSelectedVariantId] = useState('');
 
   useEffect(() => {
     setCurrentImageIndex(0);
+    if (product) {
+      const inStock = product.variants.find((v) => v.stockStatus === 'instock');
+      setSelectedVariantId(inStock?.id ?? product.variants[0]?.id ?? '');
+    }
   }, [product?.id]);
 
   useEffect(() => {
@@ -100,7 +106,9 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
     }
   };
 
-  const stockStatus = aggregateStock(product.variants);
+  const selectedVariant = product.variants.find((v) => v.id === selectedVariantId) ?? product.variants[0];
+
+  const stockStatus = selectedVariant?.stockStatus ?? aggregateStock(product.variants);
   const stockLabel =
     stockStatus === 'instock'
       ? 'In Stock'
@@ -115,11 +123,13 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
       ? 'bg-amber-50 text-amber-600'
       : 'bg-red-50 text-red-600';
 
-  const lowPrice = minPrice(product.variants);
-  const firstInStock = product.variants.find(v => v.stockStatus !== 'outofstock') ?? product.variants[0];
+  const displayPrice = selectedVariant?.price ?? minPrice(product.variants);
+  const showPriceRange = product.variants.length > 1 && !selectedVariant?.price;
 
   const telegramMessage = encodeURIComponent(
-    `Hi Baby Haus, I am interested in ordering: ${product.name}${lowPrice ? ` (from $${lowPrice.toFixed(2)})` : ''}. Please confirm availability.`
+    `Hi Baby Haus, I am interested in ordering: ${product.name}${
+      selectedVariant && selectedVariant.name !== product.name ? ` - ${selectedVariant.name}` : ''
+    }${displayPrice ? ` ($${displayPrice.toFixed(2)})` : ''}. Please confirm availability.`
   );
 
   return (
@@ -200,12 +210,20 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
 
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xl font-bold text-[#FF6B9D]">
-              {lowPrice !== null ? `$${lowPrice.toFixed(2)}${product.variants.length > 1 ? '+' : ''}` : 'Ask for Price'}
+              {displayPrice !== null ? `$${displayPrice.toFixed(2)}${showPriceRange ? '+' : ''}` : 'Ask for Price'}
             </span>
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${stockClass}`}>
               {stockLabel}
             </span>
           </div>
+
+          {product.variants.length > 1 && (
+            <ProductVariantSelector
+              variants={product.variants}
+              selectedId={selectedVariantId}
+              onSelect={setSelectedVariantId}
+            />
+          )}
 
           {product.description && (
             <p className="text-sm text-[#6B6B6B] leading-relaxed mb-4 line-clamp-4">
@@ -229,7 +247,7 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
                   stockQuantity: v.stockQuantity,
                 })),
               }}
-              selectedVariantId={firstInStock?.id}
+              selectedVariantId={selectedVariantId}
               variant="detail"
             />
             <a

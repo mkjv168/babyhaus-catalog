@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { X, Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react';
-import { parseCSV, rowsToObjects, BULK_IMPORT_TEMPLATE } from '@/lib/csv';
+import { parseCSV, rowsToObjects, BULK_IMPORT_TEMPLATE, groupRowsIntoProducts } from '@/lib/csv';
 
 interface ImportResult {
   created: number;
@@ -109,29 +109,22 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
 
       const rows = parseCSV(text);
       const objects = rowsToObjects(rows);
+      const products = groupRowsIntoProducts(objects);
 
-      // Map to API format
-      const products = objects.map((obj) => {
-        const imageUrls = [
-          obj.image_url,
-          obj.image_url_2,
-          obj.image_url_3,
-          obj.image_url_4,
-        ].filter((url) => url && url.trim().length > 0);
-
-        return {
-          name: obj.name,
-          brand: obj.brand || undefined,
-          category: obj.category,
-          description: obj.description || undefined,
-          price: obj.price ? parseFloat(obj.price) : undefined,
-          sku: obj.sku || undefined,
-          stockStatus: obj.stock_status || 'instock',
-          stockQuantity: obj.stock_quantity ? parseInt(obj.stock_quantity, 10) : 0,
-          featured: obj.featured?.toLowerCase() === 'true',
-          imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
-        };
+      // Validate
+      const validationErrors: string[] = [];
+      products.forEach((p, i) => {
+        if (p.variants.length === 0) validationErrors.push(`Product "${p.name}": no variants`);
+        p.variants.forEach((v, vi) => {
+          if (!v.name.trim()) validationErrors.push(`Product "${p.name}" variant ${vi + 1}: name is required`);
+        });
       });
+
+      if (validationErrors.length > 0) {
+        setParseError(validationErrors.join('; '));
+        setLoading(false);
+        return;
+      }
 
       const res = await fetch('/api/products/import', {
         method: 'POST',
@@ -246,31 +239,36 @@ export default function ImportModal({ isOpen, onClose, onSuccess }: ImportModalP
                     <table className="w-full text-left text-xs">
                       <thead>
                         <tr className="bg-[#faf8f5] border-b border-[#e8e4df]">
-                          <th className="px-3 py-2 font-semibold text-[#7a7a7a]">Name</th>
+                          <th className="px-3 py-2 font-semibold text-[#7a7a7a]">Product</th>
                           <th className="px-3 py-2 font-semibold text-[#7a7a7a]">Category</th>
-                          <th className="px-3 py-2 font-semibold text-[#7a7a7a]">Price</th>
-                          <th className="px-3 py-2 font-semibold text-[#7a7a7a]">SKU</th>
-                          <th className="px-3 py-2 font-semibold text-[#7a7a7a]">Stock</th>
+                          <th className="px-3 py-2 font-semibold text-[#7a7a7a]">Variants</th>
+                          <th className="px-3 py-2 font-semibold text-[#7a7a7a]">Price Range</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {preview.map((row, i) => (
-                          <tr key={i} className="border-b border-[#e8e4df]/60">
-                            <td className="px-3 py-2 font-medium text-[#2d2d2d] truncate max-w-[150px]">{row.name}</td>
-                            <td className="px-3 py-2 text-[#7a7a7a]">{row.category}</td>
-                            <td className="px-3 py-2 text-[#d4a574] font-semibold">{row.price ? `$${row.price}` : '-'}</td>
-                            <td className="px-3 py-2 text-[#7a7a7a]">{row.sku || '-'}</td>
-                            <td className="px-3 py-2">
-                              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                                row.stock_status === 'instock' ? 'bg-green-50 text-green-600' :
-                                row.stock_status === 'preorder' ? 'bg-amber-50 text-amber-600' :
-                                'bg-red-50 text-red-600'
-                              }`}>
-                                {row.stock_status || 'instock'}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
+                        {(() => {
+                          const grouped = groupRowsIntoProducts(preview);
+                          return grouped.map((product, i) => {
+                            const prices = product.variants.map(v => v.price).filter((p): p is number => p !== undefined);
+                            const minPrice = prices.length > 0 ? Math.min(...prices) : null;
+                            const maxPrice = prices.length > 0 ? Math.max(...prices) : null;
+                            const priceLabel = minPrice !== null
+                              ? (maxPrice !== null && maxPrice !== minPrice ? `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}` : `$${minPrice.toFixed(2)}`)
+                              : 'Ask for Price';
+                            return (
+                              <tr key={i} className="border-b border-[#e8e4df]/60">
+                                <td className="px-3 py-2 font-medium text-[#2d2d2d] truncate max-w-[150px]">{product.name}</td>
+                                <td className="px-3 py-2 text-[#7a7a7a]">{product.category}</td>
+                                <td className="px-3 py-2">
+                                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f5f1ec] text-[#7a7a7a]">
+                                    {product.variants.length} variant{product.variants.length !== 1 ? 's' : ''}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2 text-[#d4a574] font-semibold">{priceLabel}</td>
+                              </tr>
+                            );
+                          });
+                        })()}
                       </tbody>
                     </table>
                   </div>

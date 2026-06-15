@@ -2,17 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdmin } from '@/lib/auth';
 
+interface ImportVariant {
+  name: string;
+  sku?: string;
+  price?: number;
+  stockStatus: string;
+  stockQuantity: number;
+}
+
 interface ImportProduct {
   name: string;
   brand?: string;
   category: string;
   description?: string;
-  price?: number;
-  sku?: string;
-  stockStatus?: string;
-  stockQuantity?: number;
-  featured?: boolean;
-  imageUrls?: string[];
+  featured: boolean;
+  imageUrls: string[];
+  variants: ImportVariant[];
 }
 
 export async function POST(req: NextRequest) {
@@ -49,12 +54,20 @@ export async function POST(req: NextRequest) {
             if (!product.category?.trim()) {
               throw new Error('Category is required');
             }
+            if (!product.variants || product.variants.length === 0) {
+              throw new Error('At least one variant is required');
+            }
+
+            // Validate variants
+            for (const v of product.variants) {
+              if (!v.name?.trim()) throw new Error('All variants must have a name');
+            }
 
             const imageUrls = (product.imageUrls || [])
               .map((url: string) => url?.trim())
               .filter((url: string) => url && url.length > 0);
 
-            const productData: any = {
+            const productData = {
               name: product.name.trim(),
               brand: product.brand?.trim() || null,
               category: product.category.trim(),
@@ -63,21 +76,25 @@ export async function POST(req: NextRequest) {
               imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
             };
 
-            const variantData = {
-              name: 'Default',
-              sku: product.sku?.trim() || null,
-              price: product.price != null ? parseFloat(String(product.price)) : null,
-              stockStatus: ['instock', 'outofstock', 'preorder'].includes(product.stockStatus || '')
-                ? product.stockStatus
-                : 'instock',
-              stockQuantity: product.stockQuantity != null ? parseInt(String(product.stockQuantity), 10) : 0,
-            };
+            const variantData = product.variants.map((v, idx) => {
+              const baseSku = v.sku?.trim();
+              const sku = baseSku || `AUTO-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
+              return {
+                name: v.name.trim(),
+                sku,
+                price: v.price != null ? parseFloat(String(v.price)) : null,
+                stockStatus: ['instock', 'outofstock', 'preorder'].includes(v.stockStatus || '')
+                  ? v.stockStatus
+                  : 'instock',
+                stockQuantity: v.stockQuantity != null ? parseInt(String(v.stockQuantity), 10) : 0,
+              };
+            });
 
             await prisma.$transaction(async (tx) => {
               const created = await tx.product.create({
                 data: {
                   ...productData,
-                  variants: { create: [variantData] },
+                  variants: { create: variantData },
                 },
               });
 
@@ -95,7 +112,7 @@ export async function POST(req: NextRequest) {
             results.created++;
           } catch (err: any) {
             if (err.code === 'P2002') {
-              results.errors.push({ row: rowNumber, message: `SKU "${product.sku}" already exists` });
+              results.errors.push({ row: rowNumber, message: `SKU already exists` });
             } else {
               results.errors.push({ row: rowNumber, message: err.message || 'Unknown error' });
             }
