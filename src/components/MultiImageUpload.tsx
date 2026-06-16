@@ -11,6 +11,45 @@ interface MultiImageUploadProps {
   maxImages?: number;
 }
 
+/** Compress image client-side before upload. Returns a Blob. */
+async function compressImage(file: File, maxWidth = 1600, maxHeight = 1600, quality = 0.85): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas not supported'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Compression failed'));
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image for compression'));
+    };
+    img.src = url;
+  });
+}
+
 export default function MultiImageUpload({ 
   images, 
   onImagesChange,
@@ -28,12 +67,7 @@ export default function MultiImageUpload({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setError('Please select an image file');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB');
+      setError('Please select an image file (PNG, JPG, WEBP)');
       return;
     }
 
@@ -42,8 +76,16 @@ export default function MultiImageUpload({
     if (onUploadStart) onUploadStart();
 
     try {
+      // Compress if file is larger than 1MB
+      let uploadBlob: Blob = file;
+      let uploadName = file.name;
+      if (file.size > 1024 * 1024) {
+        uploadBlob = await compressImage(file);
+        uploadName = file.name.replace(/\.[^.]+$/, '.jpg');
+      }
+
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', uploadBlob, uploadName);
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -51,8 +93,14 @@ export default function MultiImageUpload({
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Upload failed');
+        let msg = 'Upload failed';
+        try {
+          const data = await response.json();
+          msg = data.error || `Upload failed (${response.status})`;
+        } catch {
+          msg = `Upload failed (${response.status})`;
+        }
+        throw new Error(msg);
       }
 
       const data = await response.json();
@@ -65,7 +113,8 @@ export default function MultiImageUpload({
       }
       onImagesChange(newImages);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      console.error('[MultiImageUpload] Upload error:', err);
+      setError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
     } finally {
       setUploadingIndex(null);
       if (onUploadEnd) onUploadEnd();
@@ -212,15 +261,16 @@ export default function MultiImageUpload({
                   </svg>
                 </div>
               </div>
-              <input
-                ref={(el) => setRef(el, index)}
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileSelect(e, index)}
-                disabled={isUploading}
-                className="hidden"
-                id={`image-upload-${index}`}
-              />
+                <input
+                  ref={(el) => setRef(el, index)}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileSelect(e, index)}
+                  disabled={isUploading}
+                  className="hidden"
+                  id={`image-upload-${index}`}
+                  formNoValidate
+                />
             </div>
           );
         })}
@@ -236,6 +286,7 @@ export default function MultiImageUpload({
               disabled={uploadingIndex === images.length}
               className="hidden"
               id={`image-upload-${images.length}`}
+              formNoValidate
             />
             <label
               htmlFor={`image-upload-${images.length}`}
@@ -261,7 +312,7 @@ export default function MultiImageUpload({
         )}
       </div>
       <p className="text-xs text-[#7a7a7a]">
-        First image is the cover photo. Drag images to reorder. PNG, JPG, WEBP up to 5MB each.
+        First image is the cover photo. Drag images to reorder. PNG, JPG, WEBP accepted — auto-compressed if large.
       </p>
     </div>
   );

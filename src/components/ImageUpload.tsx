@@ -10,6 +10,45 @@ interface ImageUploadProps {
   onUploadEnd?: () => void;
 }
 
+/** Compress image client-side before upload. Returns a Blob. */
+async function compressImage(file: File, maxWidth = 1600, maxHeight = 1600, quality = 0.85): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxWidth || height > maxHeight) {
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Canvas not supported'));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Compression failed'));
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image for compression'));
+    };
+    img.src = url;
+  });
+}
+
 export default function ImageUpload({ 
   currentImage, 
   onImageChange,
@@ -25,15 +64,8 @@ export default function ImageUpload({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file');
-      return;
-    }
-
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB');
       return;
     }
 
@@ -48,10 +80,17 @@ export default function ImageUpload({
     };
     reader.readAsDataURL(file);
 
-    // Upload to API
     try {
+      // Compress if file is larger than 1MB
+      let uploadBlob: Blob = file;
+      let uploadName = file.name;
+      if (file.size > 1024 * 1024) {
+        uploadBlob = await compressImage(file);
+        uploadName = file.name.replace(/\.[^.]+$/, '.jpg');
+      }
+
       const formData = new FormData();
-      formData.append('image', file);
+      formData.append('image', uploadBlob, uploadName);
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -59,15 +98,22 @@ export default function ImageUpload({
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Upload failed');
+        let msg = 'Upload failed';
+        try {
+          const data = await response.json();
+          msg = data.error || `Upload failed (${response.status})`;
+        } catch {
+          msg = `Upload failed (${response.status})`;
+        }
+        throw new Error(msg);
       }
 
       const data = await response.json();
       onImageChange(data.url);
       setPreview(data.url);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Upload failed');
+      console.error('[ImageUpload] Upload error:', error);
+      setError(error instanceof Error ? error.message : 'Upload failed. Please try again.');
       setPreview(currentImage || null);
     } finally {
       setUploading(false);
@@ -129,6 +175,7 @@ export default function ImageUpload({
             disabled={uploading}
             className="hidden"
             id="image-upload"
+            formNoValidate
           />
           <label
             htmlFor="image-upload"
@@ -154,7 +201,7 @@ export default function ImageUpload({
             )}
           </label>
           <p className="mt-1 text-xs text-[#7a7a7a]">
-            PNG, JPG, WEBP up to 5MB
+            PNG, JPG, WEBP — auto-compressed if large
           </p>
         </div>
       </div>
