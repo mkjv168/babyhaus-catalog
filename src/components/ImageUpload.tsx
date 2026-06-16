@@ -11,7 +11,7 @@ interface ImageUploadProps {
 }
 
 /** Compress image client-side before upload. Returns a Blob. */
-async function compressImage(file: File, maxWidth = 1600, maxHeight = 1600, quality = 0.85): Promise<Blob> {
+async function compressImage(file: File, maxWidth = 2000, maxHeight = 2000, quality = 0.92): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     const url = URL.createObjectURL(file);

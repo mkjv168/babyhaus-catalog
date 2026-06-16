@@ -24,7 +24,6 @@ export async function POST(req: NextRequest) {
           resource_type: 'image',
           folder: 'babyhaus-products',
           transformation: [
-            { width: 1200, height: 1200, crop: 'limit' },
             { quality: 'auto:best' },
             { fetch_format: 'auto' }
           ]
