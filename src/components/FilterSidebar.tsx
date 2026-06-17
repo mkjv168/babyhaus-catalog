@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface FilterSidebarProps {
-  brands: string[];
+  brands: { name: string; count: number }[];
   selectedBrands: string[];
   onBrandToggle: (brand: string) => void;
   priceRange: [number, number];
   onPriceRangeChange: (range: [number, number]) => void;
+  selectedStock: string;
+  onStockChange: (stock: string) => void;
   maxPrice: number;
   onClearFilters: () => void;
   productCount: number;
@@ -19,6 +21,8 @@ export function FilterSidebar({
   onBrandToggle,
   priceRange,
   onPriceRangeChange,
+  selectedStock,
+  onStockChange,
   maxPrice,
   onClearFilters,
   productCount
@@ -26,9 +30,14 @@ export function FilterSidebar({
   const [isOpen, setIsOpen] = useState(false);
   const [tempPriceRange, setTempPriceRange] = useState(priceRange);
 
+  useEffect(() => {
+    setTempPriceRange(priceRange);
+  }, [priceRange]);
+
   const hasActiveFilters = selectedBrands.length > 0 || 
     priceRange[0] > 0 || 
-    priceRange[1] < maxPrice;
+    priceRange[1] < maxPrice ||
+    selectedStock !== '';
 
   const handlePriceApply = () => {
     onPriceRangeChange(tempPriceRange);
@@ -87,21 +96,49 @@ export function FilterSidebar({
           <h3 className="text-sm font-bold text-[#2D2D2D] mb-3">Brands</h3>
           <div className="space-y-2">
             {brands.map((brand) => (
-              <label key={brand} className="flex items-center gap-2 cursor-pointer group">
+              <label key={brand.name} className="flex items-center gap-2 cursor-pointer group">
                 <input
                   type="checkbox"
-                  checked={selectedBrands.includes(brand)}
-                  onChange={() => onBrandToggle(brand)}
+                  checked={selectedBrands.includes(brand.name)}
+                  onChange={() => onBrandToggle(brand.name)}
                   className="w-4 h-4 accent-[#FF6B9D] rounded"
                 />
-                <span className="text-sm text-[#6B6B6B] group-hover:text-[#2D2D2D] transition-colors">
-                  {brand}
+                <span className="flex-1 text-sm text-[#6B6B6B] group-hover:text-[#2D2D2D] transition-colors">
+                  {brand.name}
+                </span>
+                <span className="text-[11px] text-[#A06D45] bg-[#FFF9F5] px-1.5 py-0.5 rounded-full">
+                  {brand.count}
                 </span>
               </label>
             ))}
           </div>
         </div>
       )}
+
+      {/* Stock */}
+      <div className="mb-6">
+        <h3 className="text-sm font-bold text-[#2D2D2D] mb-3">Availability</h3>
+        <div className="space-y-2">
+          {[
+            { value: '', label: 'Any stock' },
+            { value: 'inStock', label: 'In stock' },
+            { value: 'outOfStock', label: 'Out of stock' },
+          ].map((option) => (
+            <label key={option.value} className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="radio"
+                name="stock-filter"
+                checked={selectedStock === option.value}
+                onChange={() => onStockChange(option.value)}
+                className="w-4 h-4 accent-[#FF6B9D]"
+              />
+              <span className="text-sm text-[#6B6B6B] group-hover:text-[#2D2D2D] transition-colors">
+                {option.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
 
       {/* Clear Filters */}
       {hasActiveFilters && (
@@ -129,7 +166,7 @@ export function FilterSidebar({
           Filters
           {hasActiveFilters && (
             <span className="bg-[#FF6B9D] text-white text-xs px-1.5 py-0.5 rounded-full">
-              {selectedBrands.length + (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0)}
+              {selectedBrands.length + (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0) + (selectedStock ? 1 : 0)}
             </span>
           )}
         </button>

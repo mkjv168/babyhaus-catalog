@@ -7,31 +7,25 @@ import { CompactProductCard } from '@/components/CompactProductCard';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
-function aggregateStock(variants?: { stockStatus: string }[]): string {
-  if (!variants || variants.length === 0) return 'outofstock';
-  if (variants.some((v) => v.stockStatus === 'instock')) return 'instock';
-  if (variants.some((v) => v.stockStatus === 'preorder')) return 'preorder';
-  return 'outofstock';
-}
-
 export default function WishlistPage() {
-  const { items, clearWishlist } = useWishlist();
+  const { items } = useWishlist();
   const { addItem } = useCart();
 
   const handleAddAllToCart = () => {
     let addedCount = 0;
     items.forEach((product) => {
-      if (product.stockStatus !== 'outofstock') {
+      const variant = product.variants?.find((item) => item.stockStatus !== 'outofstock');
+      if (variant || product.stockStatus !== 'outofstock') {
         addItem({
-          id: product.id,
+          id: variant?.id ?? product.id,
           productId: product.id,
           name: product.name,
-          variantName: product.name,
-          price: product.price,
+          variantName: variant?.name ?? product.name,
+          price: variant?.price ?? product.price,
           imageUrl: product.imageUrl,
           brand: product.brand,
           category: product.category,
-          stockStatus: product.stockStatus,
+          stockStatus: variant?.stockStatus ?? product.stockStatus,
         });
         addedCount++;
       }
@@ -100,9 +94,11 @@ export default function WishlistPage() {
                 key={product.id}
                 product={{
                   ...product,
-                  variants: product.variantCount && product.variantCount > 1
-                    ? Array.from({ length: product.variantCount }).map((_, i) => ({
-                        id: `${product.id}-v${i}`,
+                  variants: product.variants && product.variants.length > 0
+                    ? product.variants
+                    : product.variantCount && product.variantCount > 1
+                    ? Array.from({ length: product.variantCount }).map((_, index) => ({
+                        id: `${product.id}-v${index}`,
                         name: 'Option',
                         sku: null,
                         price: product.price,

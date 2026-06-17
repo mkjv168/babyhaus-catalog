@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { SearchBar } from './SearchBar';
 import { CategoryPills } from './CategoryPills';
 import { SortSelect, SortOption } from './SortSelect';
 import { CompactProductCard } from './CompactProductCard';
 import { Pagination } from './Pagination';
 import { ProductQuickView } from './ProductQuickView';
+import { FilterSidebar } from './FilterSidebar';
 
 interface ProductImageData {
   id: string;
@@ -37,143 +38,110 @@ interface Product {
   variants: ProductVariant[];
 }
 
+interface FacetValue {
+  name: string;
+  count: number;
+}
+
+interface CatalogFacets {
+  brands: FacetValue[];
+  categories: FacetValue[];
+  price: {
+    min: number;
+    max: number;
+  };
+}
+
 interface CatalogClientProps {
   products: Product[];
-  categories: string[];
+  featuredProducts: Product[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  facets: CatalogFacets;
+  lockedCategory?: string;
 }
 
-const PRODUCTS_PER_PAGE_MOBILE = 12;
-const PRODUCTS_PER_PAGE_DESKTOP = 20;
-
-function minPrice(variants: ProductVariant[]): number | null {
-  const prices = variants.map(v => v.price).filter((p): p is number => p !== null);
-  return prices.length > 0 ? Math.min(...prices) : null;
+function parseBrands(value: string | null): string[] {
+  return value
+    ? value.split(',').map((brand) => brand.trim()).filter(Boolean)
+    : [];
 }
 
-function aggregateStock(variants: ProductVariant[]): string {
-  if (variants.some(v => v.stockStatus === 'instock')) return 'instock';
-  if (variants.some(v => v.stockStatus === 'preorder')) return 'preorder';
-  return 'outofstock';
+function isSortOption(value: string | null): value is SortOption {
+  return value === 'newest' ||
+    value === 'price-asc' ||
+    value === 'price-desc' ||
+    value === 'name-asc' ||
+    value === 'name-desc';
 }
 
-export function CatalogClient({ products, categories }: CatalogClientProps) {
+function parseStock(value: string | null): string {
+  return value === 'inStock' || value === 'outOfStock' ? value : '';
+}
+
+export function CatalogClient({
+  products,
+  featuredProducts,
+  totalCount,
+  totalPages,
+  currentPage,
+  facets,
+  lockedCategory,
+}: CatalogClientProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const urlCategory = searchParams.get('category') || 'All';
-  const urlSort = (searchParams.get('sort') as SortOption) || 'newest';
-  const urlPage = parseInt(searchParams.get('page') || '1', 10);
+  const q = searchParams.get('q') ?? '';
+  const activeCategory = lockedCategory ?? searchParams.get('category') ?? 'All';
+  const selectedBrands = parseBrands(searchParams.get('brand'));
+  const selectedStock = parseStock(searchParams.get('stock'));
+  const sortParam = searchParams.get('sort');
+  const sort: SortOption = isSortOption(sortParam) ? sortParam : 'newest';
   const focusField = searchParams.get('focus');
+  const featuredOnly = searchParams.get('featured') === 'true';
+  const categoryTotalCount = facets.categories.reduce((sum, category) => sum + category.count, 0);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState(urlCategory);
-  const [sort, setSort] = useState<SortOption>(urlSort);
-  const [currentPage, setCurrentPage] = useState(urlPage);
-  const [isMobile, setIsMobile] = useState(false);
+  const selectedMinPrice = Number(searchParams.get('minPrice') ?? 0);
+  const selectedMaxPrice = Number(searchParams.get('maxPrice') ?? facets.price.max);
+  const priceRange: [number, number] = [
+    Number.isFinite(selectedMinPrice) ? selectedMinPrice : 0,
+    Number.isFinite(selectedMaxPrice) ? selectedMaxPrice : facets.price.max,
+  ];
+
+  const [searchQuery, setSearchQuery] = useState(q);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  const pushParams = useCallback((updates: Record<string, string | number | null>) => {
+    const params = new URLSearchParams(searchParams.toString());
 
-  const updateUrl = useCallback((updates: Partial<{
-    category: string;
-    sort: SortOption;
-    page: number;
-  }>) => {
-    const params = new URLSearchParams();
-    const newCategory = updates.category ?? activeCategory;
-    const newSort = updates.sort ?? sort;
-    const newPage = updates.page ?? currentPage;
-    if (newCategory !== 'All') params.set('category', newCategory);
-    if (newSort !== 'newest') params.set('sort', newSort);
-    if (newPage !== 1) params.set('page', newPage.toString());
-    const qs = params.toString();
-    router.replace(qs ? `/?${qs}` : '/', { scroll: false });
-  }, [router, activeCategory, sort, currentPage]);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === '' || value === 'All' || value === 'newest') {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    });
 
-  const handleCategoryChange = useCallback((category: string) => {
-    setActiveCategory(category);
-    setCurrentPage(1);
-    updateUrl({ category, page: 1 });
-  }, [updateUrl]);
-
-  const handleSortChange = useCallback((value: SortOption) => {
-    setSort(value);
-    updateUrl({ sort: value });
-  }, [updateUrl]);
-
-  const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
-    updateUrl({ page });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [updateUrl]);
-
-  const handleQuickView = useCallback((product: Product) => {
-    setQuickViewProduct(product);
-  }, []);
-
-  const handleCloseQuickView = useCallback(() => {
-    setQuickViewProduct(null);
-  }, []);
-
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
-
-    if (activeCategory !== 'All') {
-      result = result.filter((p) => p.category === activeCategory);
-    }
-
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          (p.brand && p.brand.toLowerCase().includes(q)) ||
-          p.category.toLowerCase().includes(q) ||
-          (p.description && p.description.toLowerCase().includes(q)) ||
-          p.variants.some((v) =>
-            (v.sku && v.sku.toLowerCase().includes(q)) ||
-            v.name.toLowerCase().includes(q)
-          )
-      );
-    }
-
-    switch (sort) {
-      case 'price-asc':
-        result.sort((a, b) => (minPrice(a.variants) ?? Infinity) - (minPrice(b.variants) ?? Infinity));
-        break;
-      case 'price-desc':
-        result.sort((a, b) => (minPrice(b.variants) ?? -Infinity) - (minPrice(a.variants) ?? -Infinity));
-        break;
-      case 'name-asc':
-        result.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'newest':
-      default:
-        result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        break;
-    }
-
-    return result;
-  }, [products, activeCategory, searchQuery, sort]);
-
-  const productsPerPage = isMobile ? PRODUCTS_PER_PAGE_MOBILE : PRODUCTS_PER_PAGE_DESKTOP;
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-  const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * productsPerPage;
-    return filteredProducts.slice(start, start + productsPerPage);
-  }, [filteredProducts, currentPage, productsPerPage]);
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
 
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setCurrentPage(1);
-      updateUrl({ page: 1 });
-    }
-  }, [currentPage, totalPages, updateUrl]);
+    setSearchQuery(q);
+  }, [q]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      const nextQuery = searchQuery.trim();
+      if (nextQuery === q) return;
+
+      pushParams({ q: nextQuery || null, page: null });
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [pushParams, q, searchQuery]);
 
   useEffect(() => {
     if (focusField === 'search') {
@@ -190,6 +158,68 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
     }
   }, [focusField]);
 
+  const handleCategoryChange = useCallback((category: string) => {
+    pushParams({ category, page: null });
+  }, [pushParams]);
+
+  const handleBrandToggle = useCallback((brand: string) => {
+    const nextBrands = selectedBrands.includes(brand)
+      ? selectedBrands.filter((item) => item !== brand)
+      : [...selectedBrands, brand];
+
+    pushParams({ brand: nextBrands.length > 0 ? nextBrands.join(',') : null, page: null });
+  }, [pushParams, selectedBrands]);
+
+  const handlePriceRangeChange = useCallback((range: [number, number]) => {
+    pushParams({
+      minPrice: range[0] > 0 ? range[0] : null,
+      maxPrice: range[1] < facets.price.max ? range[1] : null,
+      page: null,
+    });
+  }, [facets.price.max, pushParams]);
+
+  const handleStockChange = useCallback((stock: string) => {
+    pushParams({ stock: stock || null, page: null });
+  }, [pushParams]);
+
+  const handleSortChange = useCallback((value: SortOption) => {
+    pushParams({ sort: value, page: null });
+  }, [pushParams]);
+
+  const handlePageChange = useCallback((page: number) => {
+    pushParams({ page: page === 1 ? null : page });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [pushParams]);
+
+  const handleClearFilters = useCallback(() => {
+    router.push(pathname, { scroll: false });
+  }, [pathname, router]);
+
+  const removeBrand = useCallback((brand: string) => {
+    const nextBrands = selectedBrands.filter((item) => item !== brand);
+    pushParams({ brand: nextBrands.length > 0 ? nextBrands.join(',') : null, page: null });
+  }, [pushParams, selectedBrands]);
+
+  const activeChips: { key: string; label: string; onRemove: () => void }[] = [];
+  if (q) activeChips.push({ key: 'q', label: `Search: ${q}`, onRemove: () => pushParams({ q: null, page: null }) });
+  if (featuredOnly) activeChips.push({ key: 'featured', label: 'Featured', onRemove: () => pushParams({ featured: null, page: null }) });
+  if (activeCategory !== 'All' && !lockedCategory) activeChips.push({ key: 'category', label: activeCategory, onRemove: () => pushParams({ category: null, page: null }) });
+  selectedBrands.forEach((brand) => activeChips.push({ key: `brand-${brand}`, label: brand, onRemove: () => removeBrand(brand) }));
+  if (priceRange[0] > 0 || priceRange[1] < facets.price.max) {
+    activeChips.push({
+      key: 'price',
+      label: `$${priceRange[0]} - $${priceRange[1]}`,
+      onRemove: () => pushParams({ minPrice: null, maxPrice: null, page: null }),
+    });
+  }
+  if (selectedStock) {
+    activeChips.push({
+      key: 'stock',
+      label: selectedStock === 'inStock' ? 'In stock' : 'Out of stock',
+      onRemove: () => pushParams({ stock: null, page: null }),
+    });
+  }
+
   return (
     <div className="space-y-4">
       <div id="catalog-search">
@@ -200,54 +230,126 @@ export function CatalogClient({ products, categories }: CatalogClientProps) {
         />
       </div>
 
-      <div id="catalog-categories">
-        <CategoryPills
-          categories={categories}
-          active={activeCategory}
-          onSelect={handleCategoryChange}
-        />
-      </div>
-
-      <div className="flex-1">
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <p className="text-sm text-[#6B6B6B]">
-            <span className="font-semibold text-[#2D2D2D]">{filteredProducts.length}</span> product
-            {filteredProducts.length !== 1 ? 's' : ''}
-            {currentPage > 1 && ` • Page ${currentPage}`}
-          </p>
-          <SortSelect value={sort} onChange={handleSortChange} />
+      {!lockedCategory && (
+        <div id="catalog-categories">
+          <CategoryPills
+            categories={facets.categories}
+            active={activeCategory}
+            onSelect={handleCategoryChange}
+            totalCount={categoryTotalCount}
+          />
         </div>
+      )}
 
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-16 text-[#6B6B6B]">
-            <p className="text-4xl mb-3">🔍</p>
-            <p className="text-base font-medium">No products found</p>
-            <p className="text-sm mt-1">Try adjusting your search or category filter</p>
+      <div className="flex flex-col lg:flex-row gap-6">
+        <FilterSidebar
+          brands={facets.brands}
+          selectedBrands={selectedBrands}
+          onBrandToggle={handleBrandToggle}
+          priceRange={priceRange}
+          onPriceRangeChange={handlePriceRangeChange}
+          selectedStock={selectedStock}
+          onStockChange={handleStockChange}
+          maxPrice={facets.price.max}
+          onClearFilters={handleClearFilters}
+          productCount={totalCount}
+        />
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <p className="text-sm text-[#6B6B6B]">
+              <span className="font-semibold text-[#2D2D2D]">{totalCount}</span> product
+              {totalCount !== 1 ? 's' : ''}
+              {currentPage > 1 && ` • Page ${currentPage}`}
+            </p>
+            <SortSelect value={sort} onChange={handleSortChange} />
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-              {paginatedProducts.map((product) => (
-                <CompactProductCard
-                  key={product.id}
-                  product={product}
-                  onQuickView={() => handleQuickView(product)}
-                />
+
+          {activeChips.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {activeChips.map((chip) => (
+                <button
+                  key={chip.key}
+                  onClick={chip.onRemove}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFF0F5] text-[#FF6B9D] text-xs font-semibold hover:bg-[#FFE0EC] transition-colors"
+                >
+                  {chip.label}
+                  <span aria-hidden="true">x</span>
+                </button>
               ))}
+              <button
+                onClick={handleClearFilters}
+                className="inline-flex items-center px-3 py-1.5 rounded-full border border-[#F0E6DD] text-[#6B6B6B] text-xs font-semibold hover:border-[#FF6B9D] hover:text-[#FF6B9D] transition-colors"
+              >
+                Clear all
+              </button>
             </div>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
-          </>
-        )}
+          )}
+
+          {totalCount === 0 ? (
+            <div className="py-12">
+              <div className="text-center text-[#6B6B6B] mb-8">
+                <p className="text-4xl mb-3">🔍</p>
+                <p className="text-base font-medium text-[#2D2D2D]">No products found</p>
+                <p className="mt-1 text-sm">Can&apos;t find what you&apos;re looking for?</p>
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+                  <a
+                    href={`https://t.me/babyhaus_kh?text=${encodeURIComponent(`I'm looking for: ${q || searchQuery}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-5 py-2.5 bg-[#FF6B9D] text-white text-sm font-semibold rounded-full hover:bg-[#E85A8A] transition-colors"
+                  >
+                    Ask us on Telegram
+                  </a>
+                  <button
+                    onClick={handleClearFilters}
+                    className="px-5 py-2.5 border border-[#F0E6DD] bg-white text-[#6B6B6B] text-sm font-semibold rounded-full hover:border-[#FF6B9D] hover:text-[#FF6B9D] transition-colors"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              </div>
+
+              {featuredProducts.length > 0 && (
+                <div>
+                  <h2 className="text-sm font-bold text-[#2D2D2D] mb-3">Featured picks</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                    {featuredProducts.map((product) => (
+                      <CompactProductCard
+                        key={product.id}
+                        product={product}
+                        onQuickView={() => setQuickViewProduct(product)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+                {products.map((product) => (
+                  <CompactProductCard
+                    key={product.id}
+                    product={product}
+                    onQuickView={() => setQuickViewProduct(product)}
+                  />
+                ))}
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </>
+          )}
+        </div>
       </div>
 
       <ProductQuickView
         product={quickViewProduct}
         isOpen={!!quickViewProduct}
-        onClose={handleCloseQuickView}
+        onClose={() => setQuickViewProduct(null)}
       />
     </div>
   );

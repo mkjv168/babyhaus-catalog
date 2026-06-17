@@ -1,6 +1,6 @@
 'use client';
 
-export type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'name-asc';
+export type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc';
 
 interface SortSelectProps {
   value: SortOption;
@@ -12,6 +12,7 @@ const options: { value: SortOption; label: string }[] = [
   { value: 'price-asc', label: 'Price: Low to High' },
   { value: 'price-desc', label: 'Price: High to Low' },
   { value: 'name-asc', label: 'Name: A-Z' },
+  { value: 'name-desc', label: 'Name: Z-A' },
 ];
 
 export function SortSelect({ value, onChange }: SortSelectProps) {

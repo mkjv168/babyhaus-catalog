@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { categoryUrl } from '@/lib/category';
 
 interface Product {
   description: string | null;
@@ -63,7 +65,12 @@ export function ProductDetailClient({ product }: ProductDetailClientProps) {
           )}
           <div className="flex justify-between">
             <span className="text-[#6B6B6B]">Category</span>
-            <span className="font-medium text-[#2D2D2D]">{product.category}</span>
+            <Link
+              href={categoryUrl(product.category)}
+              className="font-medium text-[#FF6B9D] hover:text-[#E85A8A] transition-colors"
+            >
+              {product.category}
+            </Link>
           </div>
         </div>
       </Accordion>

@@ -12,6 +12,14 @@ export interface Product {
   stockStatus: string;
   featured: boolean;
   variantCount?: number;
+  variants?: {
+    id: string;
+    name: string;
+    sku: string | null;
+    price: number | null;
+    stockStatus: string;
+    stockQuantity: number;
+  }[];
 }
 
 interface WishlistContextValue {

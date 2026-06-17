@@ -35,8 +35,8 @@ export function WishlistButton({ product }: WishlistButtonProps) {
       <Heart
         className={`w-4 h-4 transition-colors ${
           inWishlist
-            ? 'fill-red-500 text-red-500'
-            : 'text-[#6B6B6B] hover:text-red-500'
+            ? 'fill-[#FF6B9D] text-[#FF6B9D]'
+            : 'text-[#6B6B6B] hover:text-[#FF6B9D]'
         }`}
       />
     </button>
