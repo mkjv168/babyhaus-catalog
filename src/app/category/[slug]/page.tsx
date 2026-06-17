@@ -6,41 +6,16 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { CatalogClient } from '@/components/CatalogClient';
 import { categoryToSlug } from '@/lib/category';
-import {
-  PRODUCTS_PER_PAGE,
-  buildProductWhere,
-  firstParam,
-  getPriceSortedProducts,
-  orderByForSort,
-  parseBrands,
-  parsePage,
-  parsePrice,
-  parseSort,
-  parseStock,
-  type CatalogFilters,
-  type SearchParamValue,
-} from '@/lib/catalog';
 
 export const revalidate = 60;
 
 type CategoryParams = Promise<{ slug: string }>;
-type CategorySearchParams = Promise<{
-  q?: SearchParamValue;
-  brand?: SearchParamValue;
-  minPrice?: SearchParamValue;
-  maxPrice?: SearchParamValue;
-  stock?: SearchParamValue;
-  sort?: SearchParamValue;
-  page?: SearchParamValue;
-  featured?: SearchParamValue;
-}>;
 
 async function getCategoryFromSlug(slug: string): Promise<string | null> {
   const categories = await prisma.product.groupBy({
     by: ['category'],
     orderBy: { category: 'asc' },
   });
-
   return categories.find((item) => categoryToSlug(item.category) === slug)?.category ?? null;
 }
 
@@ -52,106 +27,55 @@ export async function generateStaticParams() {
   const categories = await prisma.product.groupBy({
     by: ['category'],
   });
-
   return categories.map((item) => ({ slug: categoryToSlug(item.category) }));
 }
 
 export async function generateMetadata({ params }: { params: CategoryParams }): Promise<Metadata> {
   const { slug } = await params;
   const category = await getCategoryFromSlug(slug);
-
   if (!category) {
     return { title: 'Category Not Found | Baby Haus' };
   }
-
   return {
     title: `${category} | Baby Haus`,
     description: categoryDescription(category),
-    alternates: {
-      canonical: `/category/${slug}`,
-    },
+    alternates: { canonical: `/category/${slug}` },
   };
 }
 
-export default async function CategoryPage({
-  params,
-  searchParams,
-}: {
-  params: CategoryParams;
-  searchParams: CategorySearchParams;
-}) {
-  const [{ slug }, queryParams] = await Promise.all([params, searchParams]);
+export default async function CategoryPage({ params }: { params: CategoryParams }) {
+  const { slug } = await params;
   const category = await getCategoryFromSlug(slug);
 
   if (!category) notFound();
 
-  const filters: CatalogFilters = {
-    q: firstParam(queryParams.q).trim(),
-    category,
-    brands: parseBrands(queryParams.brand),
-    minPrice: parsePrice(queryParams.minPrice),
-    maxPrice: parsePrice(queryParams.maxPrice),
-    stock: parseStock(queryParams.stock),
-    sort: parseSort(queryParams.sort),
-    page: parsePage(queryParams.page),
-    featured: firstParam(queryParams.featured) === 'true',
-  };
+  const allCategoryProducts = await prisma.product.findMany({
+    where: { category },
+    orderBy: { createdAt: 'desc' },
+    include: { images: { orderBy: { order: 'asc' } }, variants: true },
+  });
 
-  const where = buildProductWhere(filters);
-  const totalCount = await prisma.product.count({ where });
-  const totalPages = Math.ceil(totalCount / PRODUCTS_PER_PAGE);
-  const currentPage = totalPages > 0 ? Math.min(filters.page, totalPages) : 1;
-  const skip = (currentPage - 1) * PRODUCTS_PER_PAGE;
+  // Compute facets from category products
+  const brandsMap = new Map<string, number>();
+  let priceMin = Infinity;
+  let priceMax = 0;
 
-  const brandFacetWhere = buildProductWhere(filters, { omitBrand: true });
-  const priceFacetWhere = buildProductWhere(filters, { omitPrice: true });
-
-  const [products, categoryCounts, brandCounts, priceFacet, featuredProducts] = await Promise.all([
-    filters.sort === 'price-asc' || filters.sort === 'price-desc'
-      ? getPriceSortedProducts(where, filters.sort, skip, PRODUCTS_PER_PAGE)
-      : prisma.product.findMany({
-          where,
-          orderBy: orderByForSort(filters.sort),
-          skip,
-          take: PRODUCTS_PER_PAGE,
-          include: { images: { orderBy: { order: 'asc' } }, variants: true },
-        }),
-    prisma.product.groupBy({
-      by: ['category'],
-      where: buildProductWhere(filters, { omitCategory: true }),
-      _count: { _all: true },
-      orderBy: { category: 'asc' },
-    }),
-    prisma.product.groupBy({
-      by: ['brand'],
-      where: { AND: [brandFacetWhere, { brand: { not: null } }] },
-      _count: { _all: true },
-      orderBy: { brand: 'asc' },
-    }),
-    prisma.productVariant.aggregate({
-      where: {
-        product: priceFacetWhere,
-        price: { not: null },
-      },
-      _min: { price: true },
-      _max: { price: true },
-    }),
-    prisma.product.findMany({
-      where: { featured: true, category },
-      orderBy: { createdAt: 'desc' },
-      take: 4,
-      include: { images: { orderBy: { order: 'asc' } }, variants: true },
-    }),
-  ]);
+  allCategoryProducts.forEach((p) => {
+    if (p.brand) brandsMap.set(p.brand, (brandsMap.get(p.brand) || 0) + 1);
+    p.variants.forEach((v) => {
+      if (v.price !== null) {
+        priceMin = Math.min(priceMin, v.price);
+        priceMax = Math.max(priceMax, v.price);
+      }
+    });
+  });
 
   const facets = {
-    brands: brandCounts
-      .filter((item): item is typeof item & { brand: string } => item.brand !== null)
-      .map((item) => ({ name: item.brand, count: item._count._all })),
-    categories: categoryCounts.map((item) => ({ name: item.category, count: item._count._all })),
+    brands: Array.from(brandsMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name)),
+    categories: [{ name: category, count: allCategoryProducts.length }],
     price: {
-      min: priceFacet._min.price ?? 0,
-      max: priceFacet._max.price ?? 0,
+      min: priceMin === Infinity ? 0 : priceMin,
+      max: priceMax,
     },
   };
 
@@ -173,11 +97,7 @@ export default async function CategoryPage({
       <section id="catalog" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-6">
         <Suspense fallback={null}>
           <CatalogClient
-            products={products}
-            featuredProducts={featuredProducts}
-            totalCount={totalCount}
-            totalPages={totalPages}
-            currentPage={currentPage}
+            allProducts={allCategoryProducts}
             facets={facets}
             lockedCategory={category}
           />

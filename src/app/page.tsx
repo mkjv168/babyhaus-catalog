@@ -5,123 +5,63 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import BannerCarousel from '@/components/BannerCarousel';
 import {
-  PRODUCTS_PER_PAGE,
-  buildProductWhere,
-  firstParam,
-  getPriceSortedProducts,
-  orderByForSort,
-  parseBrands,
-  parsePage,
-  parsePrice,
-  parseSort,
-  parseStock,
-  type CatalogFilters,
-  type SearchParamValue,
-} from '@/lib/catalog';
-import {
   MerchandisingSections,
   MerchandisingSectionsSkeleton,
-  getMerchandisingSections,
 } from '@/components/MerchandisingSections';
 
 export const revalidate = 60;
 
-type HomeSearchParams = Promise<{
-  q?: SearchParamValue;
-  category?: SearchParamValue;
-  brand?: SearchParamValue;
-  minPrice?: SearchParamValue;
-  maxPrice?: SearchParamValue;
-  stock?: SearchParamValue;
-  sort?: SearchParamValue;
-  page?: SearchParamValue;
-  featured?: SearchParamValue;
-}>;
-
-export default async function Home({ searchParams }: { searchParams: HomeSearchParams }) {
-  const params = await searchParams;
-  const category = firstParam(params.category).trim();
-  const merchandisingPromise = getMerchandisingSections();
-  const filters: CatalogFilters = {
-    q: firstParam(params.q).trim(),
-    category: category === 'All' ? '' : category,
-    brands: parseBrands(params.brand),
-    minPrice: parsePrice(params.minPrice),
-    maxPrice: parsePrice(params.maxPrice),
-    stock: parseStock(params.stock),
-    sort: parseSort(params.sort),
-    page: parsePage(params.page),
-    featured: firstParam(params.featured) === 'true',
-  };
-
-  const where = buildProductWhere(filters);
-  const totalCount = await prisma.product.count({ where });
-  const totalPages = Math.ceil(totalCount / PRODUCTS_PER_PAGE);
-  const currentPage = totalPages > 0 ? Math.min(filters.page, totalPages) : 1;
-  const skip = (currentPage - 1) * PRODUCTS_PER_PAGE;
-
-  const categoryFacetWhere = buildProductWhere(filters, { omitCategory: true });
-  const brandFacetWhere = buildProductWhere(filters, { omitBrand: true });
-  const priceFacetWhere = buildProductWhere(filters, { omitPrice: true });
-
-  const [
-    products,
-    banners,
-    categoryCounts,
-    brandCounts,
-    priceFacet,
-    featuredProducts,
-  ] = await Promise.all([
-    filters.sort === 'price-asc' || filters.sort === 'price-desc'
-      ? getPriceSortedProducts(where, filters.sort, skip, PRODUCTS_PER_PAGE)
-      : prisma.product.findMany({
-          where,
-          orderBy: orderByForSort(filters.sort),
-          skip,
-          take: PRODUCTS_PER_PAGE,
-          include: { images: { orderBy: { order: 'asc' } }, variants: true },
-        }),
+export default async function Home() {
+  const [allProducts, banners] = await Promise.all([
+    prisma.product.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: { images: { orderBy: { order: 'asc' } }, variants: true },
+    }),
     prisma.banner.findMany({
       where: { active: true },
       orderBy: { order: 'asc' },
     }),
-    prisma.product.groupBy({
-      by: ['category'],
-      where: categoryFacetWhere,
-      _count: { _all: true },
-      orderBy: { category: 'asc' },
-    }),
-    prisma.product.groupBy({
-      by: ['brand'],
-      where: { AND: [brandFacetWhere, { brand: { not: null } }] },
-      _count: { _all: true },
-      orderBy: { brand: 'asc' },
-    }),
-    prisma.productVariant.aggregate({
-      where: {
-        product: priceFacetWhere,
-        price: { not: null },
-      },
-      _min: { price: true },
-      _max: { price: true },
-    }),
-    prisma.product.findMany({
-      where: { featured: true },
-      orderBy: { createdAt: 'desc' },
-      take: 4,
-      include: { images: { orderBy: { order: 'asc' } }, variants: true },
-    }),
   ]);
 
+  // Compute merchandising data server-side
+  const featuredProducts = allProducts.filter((p) => p.featured).slice(0, 4);
+  const newArrivals = [...allProducts].sort((a, b) =>
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  ).slice(0, 4);
+  const inStockNow = allProducts
+    .filter((p) => p.variants.some((v) => v.stockStatus === 'instock'))
+    .slice(0, 4);
+
+  // Facets from full catalog
+  const brandsMap = new Map<string, number>();
+  const categoriesMap = new Map<string, number>();
+  let priceMin = Infinity;
+  let priceMax = 0;
+
+  allProducts.forEach((p) => {
+    if (p.brand) brandsMap.set(p.brand, (brandsMap.get(p.brand) || 0) + 1);
+    categoriesMap.set(p.category, (categoriesMap.get(p.category) || 0) + 1);
+    p.variants.forEach((v) => {
+      if (v.price !== null) {
+        priceMin = Math.min(priceMin, v.price);
+        priceMax = Math.max(priceMax, v.price);
+      }
+    });
+  });
+
   const facets = {
-    brands: brandCounts
-      .filter((item): item is typeof item & { brand: string } => item.brand !== null)
-      .map((item) => ({ name: item.brand, count: item._count._all })),
-    categories: categoryCounts.map((item) => ({ name: item.category, count: item._count._all })),
+    brands: Array.from(brandsMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name)),
+    categories: Array.from(categoriesMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name)),
     price: {
-      min: priceFacet._min.price ?? 0,
-      max: priceFacet._max.price ?? 0,
+      min: priceMin === Infinity ? 0 : priceMin,
+      max: priceMax,
     },
+  };
+
+  const sectionsData = {
+    featured: featuredProducts,
+    newArrivals,
+    inStockNow,
   };
 
   return (
@@ -176,37 +116,19 @@ export default async function Home({ searchParams }: { searchParams: HomeSearchP
         </section>
       )}
 
+      {/* Merchandising Sections */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Suspense fallback={<MerchandisingSectionsSkeleton />}>
-          <MerchandisingSections sectionsPromise={merchandisingPromise} />
+          <MerchandisingSections sectionsData={sectionsData} />
         </Suspense>
       </section>
 
       {/* Catalog */}
       <section id="catalog" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-2">
-        <Suspense fallback={
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-[#F0E6DD] overflow-hidden animate-pulse">
-                <div className="aspect-square bg-[#FFF9F5]" />
-                <div className="p-3 space-y-2">
-                  <div className="h-3 bg-[#FFF9F5] rounded w-1/2" />
-                  <div className="h-4 bg-[#FFF9F5] rounded w-3/4" />
-                  <div className="h-3 bg-[#FFF9F5] rounded w-1/3" />
-                </div>
-              </div>
-            ))}
-          </div>
-        }>
-          <CatalogClient
-            products={products}
-            featuredProducts={featuredProducts}
-            totalCount={totalCount}
-            totalPages={totalPages}
-            currentPage={currentPage}
-            facets={facets}
-          />
-        </Suspense>
+        <CatalogClient
+          allProducts={allProducts}
+          facets={facets}
+        />
       </section>
 
       <Footer />

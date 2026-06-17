@@ -1,47 +1,46 @@
 import Link from 'next/link';
-import { prisma } from '@/lib/prisma';
 import { CompactProductCard } from './CompactProductCard';
 
-type ProductCardData = Awaited<ReturnType<typeof getMerchandisingSections>>[number]['products'][number];
+interface ProductImageData {
+  id: string;
+  url: string;
+  order: number;
+}
 
-export async function getMerchandisingSections() {
-  const [featuredProducts, newArrivals, inStockNow] = await Promise.all([
-    prisma.product.findMany({
-      where: { featured: true },
-      orderBy: { createdAt: 'desc' },
-      take: 4,
-      include: { images: { orderBy: { order: 'asc' } }, variants: true },
-    }),
-    prisma.product.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 4,
-      include: { images: { orderBy: { order: 'asc' } }, variants: true },
-    }),
-    prisma.product.findMany({
-      where: { variants: { some: { stockStatus: 'instock' } } },
-      orderBy: { updatedAt: 'desc' },
-      take: 4,
-      include: { images: { orderBy: { order: 'asc' } }, variants: true },
-    }),
-  ]);
+interface ProductVariant {
+  id: string;
+  name: string;
+  sku: string | null;
+  price: number | null;
+  stockStatus: string;
+  stockQuantity: number;
+}
 
-  return [
-    {
-      title: 'Featured Products',
-      href: '/?featured=true#catalog',
-      products: featuredProducts,
-    },
-    {
-      title: 'New Arrivals',
-      href: '/?sort=newest#catalog',
-      products: newArrivals,
-    },
-    {
-      title: 'In Stock Now',
-      href: '/?stock=inStock#catalog',
-      products: inStockNow,
-    },
-  ];
+interface Product {
+  id: string;
+  name: string;
+  brand: string | null;
+  category: string;
+  description: string | null;
+  imageUrl: string | null;
+  featured: boolean;
+  createdAt: Date | string;
+  images?: ProductImageData[];
+  variants: ProductVariant[];
+}
+
+interface SectionData {
+  title: string;
+  href: string;
+  products: Product[];
+}
+
+interface MerchandisingSectionsProps {
+  sectionsData: {
+    featured: Product[];
+    newArrivals: Product[];
+    inStockNow: Product[];
+  };
 }
 
 function MerchandisingSection({
@@ -51,7 +50,7 @@ function MerchandisingSection({
 }: {
   title: string;
   href: string;
-  products: ProductCardData[];
+  products: Product[];
 }) {
   if (products.length === 0) return null;
 
@@ -79,12 +78,12 @@ function MerchandisingSection({
   );
 }
 
-export async function MerchandisingSections({
-  sectionsPromise,
-}: {
-  sectionsPromise: ReturnType<typeof getMerchandisingSections>;
-}) {
-  const sections = await sectionsPromise;
+export function MerchandisingSections({ sectionsData }: MerchandisingSectionsProps) {
+  const sections: SectionData[] = [
+    { title: 'Featured Products', href: '/?featured=true#catalog', products: sectionsData.featured },
+    { title: 'New Arrivals', href: '/?sort=newest#catalog', products: sectionsData.newArrivals },
+    { title: 'In Stock Now', href: '/?stock=inStock#catalog', products: sectionsData.inStockNow },
+  ];
 
   return (
     <div className="space-y-7">

@@ -4,9 +4,6 @@ import Link from 'next/link';
 import { ProductImage } from './ProductImage';
 import { AddToCartButton } from './AddToCartButton';
 import { ShareButton } from './ShareButton';
-import { WishlistButton } from './WishlistButton';
-import type { Product as WishlistProduct } from '@/context/WishlistContext';
-
 interface ProductImageData {
   id: string;
   url: string;
@@ -78,25 +75,6 @@ export function CompactProductCard({ product, onQuickView }: CompactProductCardP
       ? `From $${lowPrice.toFixed(2)}`
       : `$${lowPrice.toFixed(2)}`)
     : 'Ask';
-  const wishlistProduct: WishlistProduct = {
-    id: product.id,
-    name: product.name,
-    brand: product.brand,
-    category: product.category,
-    price: lowPrice,
-    imageUrl: product.imageUrl,
-    stockStatus,
-    featured: product.featured,
-    variantCount: product.variants.length,
-    variants: product.variants.map((variant) => ({
-      id: variant.id,
-      name: variant.name,
-      sku: variant.sku,
-      price: variant.price,
-      stockStatus: variant.stockStatus,
-      stockQuantity: variant.stockQuantity,
-    })),
-  };
 
   const handleCardClick = (e: React.MouseEvent) => {
     if (typeof window !== 'undefined' && window.innerWidth < 768 && onQuickView) {
@@ -126,9 +104,6 @@ export function CompactProductCard({ product, onQuickView }: CompactProductCardP
               ✨ Featured
             </span>
           )}
-          <div className="absolute top-2 right-2 z-10">
-            <WishlistButton product={wishlistProduct} />
-          </div>
         </div>
         <div className="p-3 pb-2">
           <div className="flex items-center gap-1.5 mb-1">

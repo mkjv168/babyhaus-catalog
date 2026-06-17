@@ -3,13 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
-import { useWishlist } from '@/context/WishlistContext';
-import { Grid2X2, Heart, Home, Search, ShoppingCart } from 'lucide-react';
+import { Grid2X2, Home, Search, ShoppingCart } from 'lucide-react';
 
 export function MobileBottomNav() {
   const pathname = usePathname();
   const { totalItems, setIsOpen } = useCart();
-  const { totalItems: wishlistItems } = useWishlist();
 
   // Hide on admin pages
   if (pathname.startsWith('/admin')) {
@@ -37,22 +35,6 @@ export function MobileBottomNav() {
         >
           <Search className="w-[22px] h-[22px]" />
           <span className="text-[10px] font-medium">Search</span>
-        </Link>
-
-        {/* Favorites */}
-        <Link
-          href="/wishlist"
-          className={`flex-1 flex flex-col items-center justify-center gap-0.5 w-full h-full relative ${pathname === '/wishlist' ? 'text-[#FF6B9D]' : 'text-[#6B6B6B]'}`}
-        >
-          <div className="relative">
-            <Heart className="w-[22px] h-[22px]" />
-            {wishlistItems > 0 && (
-              <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 flex items-center justify-center bg-[#FF6B9D] text-white text-[9px] font-bold rounded-full px-1">
-                {wishlistItems}
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] font-medium">Favorites</span>
         </Link>
 
         {/* Categories */}

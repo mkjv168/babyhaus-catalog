@@ -2,12 +2,10 @@
 
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
-import { useWishlist } from '@/context/WishlistContext';
-import { Heart, ShoppingCart, MessageCircle } from 'lucide-react';
+import { ShoppingCart, MessageCircle } from 'lucide-react';
 
 export function Header() {
   const { totalItems, setIsOpen } = useCart();
-  const { totalItems: wishlistItems } = useWishlist();
 
   return (
     <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#F0E6DD]">
@@ -29,19 +27,6 @@ export function Header() {
           <span className="hidden sm:flex items-center gap-1.5 text-xs text-[#6B6B6B] font-medium">
             <span>🇰🇭</span> Cambodia
           </span>
-
-          <Link
-            href="/wishlist"
-            className="relative hidden sm:flex items-center justify-center w-9 h-9 rounded-full bg-[#FFF9F5] text-[#2D2D2D] hover:bg-[#FFF0F5] hover:text-[#FF6B9D] transition-colors"
-            aria-label="Favorites"
-          >
-            <Heart className="w-[18px] h-[18px]" />
-            {wishlistItems > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center bg-[#FF6B9D] text-white text-[10px] font-bold rounded-full border-2 border-white">
-                {wishlistItems}
-              </span>
-            )}
-          </Link>
 
           <button
             onClick={() => setIsOpen(true)}
