@@ -166,6 +166,21 @@ export function CatalogClient({ allProducts, facets, lockedCategory }: CatalogCl
 
   const [searchQuery, setSearchQuery] = useState(q);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const [gridCols, setGridCols] = useState<2 | 3>(2);
+
+  useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('babyhaus-grid-cols') : null;
+    if (saved === '2' || saved === '3') {
+      setGridCols(Number(saved) as 2 | 3);
+    }
+  }, []);
+
+  const handleGridChange = useCallback((cols: 2 | 3) => {
+    setGridCols(cols);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('babyhaus-grid-cols', String(cols));
+    }
+  }, []);
 
   const filtered = useMemo(() => {
     let result = filterProducts(allProducts, q, activeCategory, selectedBrands, selectedStock, priceRange[0], priceRange[1]);
@@ -306,7 +321,34 @@ export function CatalogClient({ allProducts, facets, lockedCategory }: CatalogCl
               <span className="font-semibold text-[#2D2D2D]">{totalCount}</span> product{totalCount !== 1 ? 's' : ''}
               {safePage > 1 && ` • Page ${safePage}`}
             </p>
-            <SortSelect value={sort} onChange={handleSortChange} />
+            <div className="flex items-center gap-2">
+              <div className="flex items-center border border-[#F0E6DD] rounded-lg p-0.5 bg-white">
+                <button
+                  onClick={() => handleGridChange(2)}
+                  className={`p-1.5 rounded transition-colors ${gridCols === 2 ? 'bg-[#FF6B9D] text-white' : 'text-[#6B6B6B] hover:text-[#FF6B9D]'}`}
+                  title="2 per row"
+                  aria-label="2 columns"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="2" y="2" width="5" height="12" rx="1"/>
+                    <rect x="9" y="2" width="5" height="12" rx="1"/>
+                  </svg>
+                </button>
+                <button
+                  onClick={() => handleGridChange(3)}
+                  className={`p-1.5 rounded transition-colors ${gridCols === 3 ? 'bg-[#FF6B9D] text-white' : 'text-[#6B6B6B] hover:text-[#FF6B9D]'}`}
+                  title="3 per row"
+                  aria-label="3 columns"
+                >
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="1" y="2" width="4" height="12" rx="1"/>
+                    <rect x="6" y="2" width="4" height="12" rx="1"/>
+                    <rect x="11" y="2" width="4" height="12" rx="1"/>
+                  </svg>
+                </button>
+              </div>
+              <SortSelect value={sort} onChange={handleSortChange} />
+            </div>
           </div>
 
           {activeChips.length > 0 && (
@@ -342,9 +384,12 @@ export function CatalogClient({ allProducts, facets, lockedCategory }: CatalogCl
               {featuredProducts.length > 0 && (
                 <div>
                   <h2 className="text-sm font-bold text-[#2D2D2D] mb-3">Featured picks</h2>
-                  <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+                  <div className={gridCols === 2
+                    ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3 md:gap-4"
+                    : "grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4"
+                  }>
                     {featuredProducts.map((product) => (
-                      <CompactProductCard key={product.id} product={product} onQuickView={() => setQuickViewProduct(product)} />
+                      <CompactProductCard key={product.id} product={product} onQuickView={() => setQuickViewProduct(product)} compact={gridCols === 3} />
                     ))}
                   </div>
                 </div>
@@ -352,9 +397,12 @@ export function CatalogClient({ allProducts, facets, lockedCategory }: CatalogCl
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+              <div className={gridCols === 2
+                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-3 md:gap-4"
+                : "grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4"
+              }>
                 {paginatedProducts.map((product) => (
-                  <CompactProductCard key={product.id} product={product} onQuickView={() => setQuickViewProduct(product)} />
+                  <CompactProductCard key={product.id} product={product} onQuickView={() => setQuickViewProduct(product)} compact={gridCols === 3} />
                 ))}
               </div>
               {totalPages > 1 && (
