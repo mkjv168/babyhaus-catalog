@@ -69,7 +69,7 @@ function MerchandisingSection({
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible md:pb-0 md:gap-4">
         {products.map((product) => (
-          <div key={product.id} className="min-w-[72%] sm:min-w-[42%] snap-start md:min-w-0">
+          <div key={product.id} className="min-w-[48%] sm:min-w-[42%] snap-start md:min-w-0">
             <CompactProductCard product={product} />
           </div>
         ))}
@@ -114,7 +114,7 @@ export function MerchandisingSectionsSkeleton() {
             {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className="min-w-[72%] sm:min-w-[42%] md:min-w-0 bg-white rounded-3xl border border-[#F0E6DD] overflow-hidden animate-pulse"
+                className="min-w-[48%] sm:min-w-[42%] md:min-w-0 bg-white rounded-3xl border border-[#F0E6DD] overflow-hidden animate-pulse"
               >
                 <div className="aspect-square bg-[#FFF9F5]" />
                 <div className="p-3 space-y-2">

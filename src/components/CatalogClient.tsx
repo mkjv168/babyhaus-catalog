@@ -342,7 +342,7 @@ export function CatalogClient({ allProducts, facets, lockedCategory }: CatalogCl
               {featuredProducts.length > 0 && (
                 <div>
                   <h2 className="text-sm font-bold text-[#2D2D2D] mb-3">Featured picks</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                  <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
                     {featuredProducts.map((product) => (
                       <CompactProductCard key={product.id} product={product} onQuickView={() => setQuickViewProduct(product)} />
                     ))}
@@ -352,7 +352,7 @@ export function CatalogClient({ allProducts, facets, lockedCategory }: CatalogCl
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+              <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
                 {paginatedProducts.map((product) => (
                   <CompactProductCard key={product.id} product={product} onQuickView={() => setQuickViewProduct(product)} />
                 ))}
